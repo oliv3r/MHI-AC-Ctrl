@@ -191,6 +191,8 @@ enum AC3Dauto {  // 3D auto enum
   ACVANES_3DAUTO_ON  = 0b00000100,
 };
 
+int wait_for_frame_idle(uint8_t pin, millis_t timeout);
+
 class CallbackInterfaceStatus {
   public:
     virtual void status_cb(ACStatus status, int value) = 0;

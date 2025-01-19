@@ -59,6 +59,30 @@ void MHI_AC_Ctrl_Core::init() {
   MHI_AC_Ctrl_Core::reset_old_values();
 }
 
+/*
+ * wait_pin_  Wait for a *pin to change to *state and stay there for at least
+ *            *state_ms. Error if *state is not reached within *timeout_ms.
+ *
+ * Returns 0 if pin has reached *state, negative error otherwise
+ */
+int HOT wait_pin_(uint8_t pin, uint8_t state,
+                  uint32_t timeout_ms, uint32_t stable_state_ms) {
+  uint32_t start_ms = millis();
+
+  do {
+    uint32_t pin_ms = 0;
+
+    if ((millis() - start_ms) > timeout_ms)
+      return -1;
+
+    if (digitalRead(pin) == state)
+      pin_ms = millis();
+
+  } while ((millis() - pin_ms) <= stable_state_ms);
+
+  return 0;
+}
+
 int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
   const uint8_t opdata_cnt = sizeof(opdata) / sizeof(uint8_t) / 2;
   static uint8_t opdata_no = 0;              //
@@ -74,19 +98,26 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
 
   static uint32_t call_counter = 0;                     // counts how often this loop was called
   static uint32_t last_troom_interval_ms = 0; // remember when Troom internal has changed
+  int ret = 0;
 
   if (this->framesize == MHI_FRAME_SIZE_EXTENDED)
     MISO_frame[0] = 0xAA;
 
   call_counter++;
 
-  uint32_t clock_ms = millis();           // time of last SCK low level
-  while ((millis() - clock_ms) < 5) {  // wait for 5ms stable high signal to detect a frame start
-    if (!digitalRead(SCK_PIN) != HIGH)
-      clock_ms = millis();
-    if ((millis() - start_ms) > max_time_ms)
-      return ERR_MSG_TIMEOUT_CLOCK_LOW;  // SCK stuck@ low error detection
-  }
+/*
+ * Wait for the SPI clock to become idle, indicating a frame pause. A frame
+ * pause is about 40 ms and happens in between transmission of a frame.
+ *
+ * The frame pause thus indicates that a new frame is about to start and can be
+ * used to sync transmissions against. It is reasonable to assume, that the
+ * detection of the frame pause happens just after the last bit of the previous
+ * frame has been sent, so after the frame pause detection, there's ample time
+ * to do some processing.
+ */
+  ret = wait_pin_(SCK_pin, LOW, 5, millis() - max_time_ms - start_ms);
+  if (ret)
+    return err_msg_timeout_SCK_low;
 
   // build the next MISO frame
   doubleframe = !doubleframe;           // toggle every frame
