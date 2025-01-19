@@ -102,8 +102,8 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
   if (frame++ <= 2) {   // use opdata request only for 2 subsequent frames
     if (doubleframe) {  // start when MISO_frame[DB14] bit2 is set
       if (erropdata_cnt == 0) {
-        MISO_frame[DB6] = pgm_read_word(opdata + opdata_no);
-        MISO_frame[DB9] = pgm_read_word(opdata + opdata_no) >> 8;
+        MISO_frame[DB6] = opdata[opdata_no][0];
+        MISO_frame[DB9] = opdata[opdata_no][1];
         opdata_no = (opdata_no + 1) % opdata_cnt;
       }
 

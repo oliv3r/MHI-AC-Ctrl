@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 // comment out the data you are not interested, but at least leave one row !
-const uint8_t opdata[][2] PROGMEM = {
+const uint8_t opdata[][2] = {
   { 0xc0, 0x02 },  //  1 "MODE"
   { 0xc0, 0x05 },  //  2 "SET-TEMP" [°C]
   { 0xc0, 0x80 },  //  3 "RETURN-AIR" [°C]
