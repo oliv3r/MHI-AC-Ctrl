@@ -148,9 +148,10 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
     MISO_frame[0] = 0xAA;
 
   call_counter++;
-  uint32_t clock_ms = millis();        // time of last SCK low level
+
+  uint32_t clock_ms = millis();           // time of last SCK low level
   while ((millis() - clock_ms) < 5) {  // wait for 5ms stable high signal to detect a frame start
-    if (!digitalRead(SCK_PIN))
+    if (!digitalRead(SCK_PIN) != HIGH)
       clock_ms = millis();
     if ((millis() - start_ms) > max_time_ms)
       return ERR_MSG_TIMEOUT_CLOCK_LOW;  // SCK stuck@ low error detection
@@ -246,18 +247,19 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
     for (uint8_t bit_cnt = 0; bit_cnt < 8; bit_cnt++) {  // read and write 1 byte
       clock_ms = millis();
 
-      while (digitalRead(SCK_PIN)) {  // wait for falling edge
+      while (digitalRead(SCK_PIN) != LOW) {  // wait for falling edge
         if (millis() - start_ms > max_time_ms)
           return ERR_MSG_TIMEOUT_CLOCK_HIGH;  // SCK stuck@ high error detection
       }
+
       if ((MISO_frame[byte_cnt] & bit_mask) > 0)
-        digitalWrite(MISO_PIN, 1);
+        digitalWrite(MISO_PIN, HIGH);
       else
-        digitalWrite(MISO_PIN, 0);
+        digitalWrite(MISO_PIN, LOW);
 
-      while (!digitalRead(SCK_PIN)) {}  // wait for rising edge
+      while (!digitalRead(SCK_PIN) != HIGH) {}  // wait for rising edge
 
-      if (digitalRead(MOSI_PIN))
+      if (digitalRead(MOSI_PIN) != HIGH)
         MOSI_byte += bit_mask;
 
       bit_mask = bit_mask << 1;
