@@ -38,6 +38,11 @@ const uint8_t opdata[][2] PROGMEM = {
 #define MISO_PIN 12
 
 // constants for the frame
+enum mhi_frame_size {
+  MHI_FRAME_SIZE_STANDARD = 20,
+  MHI_FRAME_SIZE_EXTENDED = 33,
+};
+
 #define SB0 0
 #define SB1  SB0 + 1
 #define SB2  SB0 + 2
@@ -241,7 +246,7 @@ class MHI_AC_Ctrl_Core {
     uint8_t vanes_vertical_0_new = 0;
     uint8_t vanes_vertical_1_new = 0;
     uint8_t vanes_3dauto_new = 0;
-    uint8_t framesize = 20;
+    enum mhi_frame_size framesize = MHI_FRAME_SIZE_STANDARD;
 
     CallbackInterfaceStatus *status_cb;
 
@@ -263,7 +268,7 @@ class MHI_AC_Ctrl_Core {
     void enable_error_operating_data();             // request that the AC provides the error data
     float get_troom_offset();             // get troom offset, only usefull when ENHANCED_RESOLUTION is used
     void set_troom_offset(float offset);  // set troom offset, only usefull when ENHANCED_RESOLUTION is used
-    void set_frame_size(uint8_t framesize);  // set framesize to 20 or 33
+    void set_frame_size(enum mhi_frame_size framesize);  // set framesize to 20 or 33
     void set_3dauto(enum AC3Dauto vanes_3dauto);  // set the 3D auto mode on or off
     void set_vanes_vertical(enum ACVanesVertical vanes);  // set the vanes LR (vertical) position
 };

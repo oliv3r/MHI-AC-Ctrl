@@ -123,9 +123,8 @@ void MHI_AC_Ctrl_Core::set_troom_offset(float offset) {
   this->troom_offset = offset;
 }
 
-void MHI_AC_Ctrl_Core::set_frame_size(uint8_t framesize) {
-  if (framesize == 20 || framesize == 33)
-    this->framesize = framesize;
+void MHI_AC_Ctrl_Core::set_frame_size(enum mhi_frame_size framesize) {
+  this->frameSize = framesize;
 }
 
 int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
@@ -137,14 +136,14 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
   static uint8_t erropdata_cnt = 0;          // number of expected error operating data
   static bool doubleframe = false;
   static int frame = 1;
-  static uint8_t MOSI_frame[33];
+  static uint8_t MOSI_frame[MHI_FRAME_SIZE_EXTENDED];
   //                            sb0   sb1   sb2   db0   db1   db2   db3   db4   db5   db6   db7   db8   db9  db10  db11  db12  db13  db14  chkH  chkL  db15  db16  db17  db18  db19  db20  db21  db22  db23  db24  db25  db26  chk2L
   static uint8_t MISO_frame[] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x22 };
 
   static uint32_t call_counter = 0;                     // counts how often this loop was called
   static uint32_t last_troom_interval_ms = 0; // remember when Troom internal has changed
 
-  if (this->framesize == 33)
+  if (this->framesize == MHI_FRAME_SIZE_EXTENDED)
     MISO_frame[0] = 0xAA;
 
   call_counter++;
@@ -226,7 +225,7 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
   MISO_frame[CBH] = highByte(checksum);
   MISO_frame[CBL] = lowByte(checksum);
 
-  if (this->framesize == 33) {  // Only for framesize 33 (WF-RAC)
+  if (this->framesize == MHI_FRAME_SIZE_EXTENDED) {  // Only for framesize 33 (WF-RAC)
     MISO_frame[DB16] = 0;
     MISO_frame[DB16] |= this->new_vanes_vertical_1;
     MISO_frame[DB17] = 0;
@@ -278,14 +277,14 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
   if (((MOSI_frame[CBH] << 8) | MOSI_frame[CBL]) != checksum)
     return ERR_MSG_INVALID_CHECKSUM;
 
-  if (this->framesize == 33) {  // Only for framesize 33 (WF-RAC)
+  if (this->framesize == MHI_FRAME_SIZE_EXTENDED) {  // Only for framesize 33 (WF-RAC)
     checksum = calc_checksumFrame33(MOSI_frame);
     if (MOSI_frame[CBL2] != lowByte(checksum))
       return ERR_MSG_INVALID_CHECKSUM;
   }
 
   if (new_datapacket_received) {
-    if (this->framesize == 33) {  // Only for framesize 33 (WF-RAC)
+    if (this->framesize == MHI_FRAME_SIZE_EXTENDED) {  // Only for framesize 33 (WF-RAC)
       uint8_t vanes_vertical_tmp = (MOSI_frame[DB16] & 0x07) + ((MOSI_frame[DB17] & 0x01) << 4);
       if (vanes_vertical_tmp != this->status_vertical_old) {  // Vanes Left Right
         if ((vanes_vertical_tmp & 0x10) != 0)  // Vanes LR status swing

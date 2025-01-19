@@ -461,7 +461,7 @@ void setup() {
   mhi_ac_ctrl_core.MHI_AC_ctrl_status(&mhiStatusHandler);
   mhi_ac_ctrl_core.init();
 #ifdef USE_EXTENDED_FRAME_SIZE    
-  mhi_ac_ctrl_core.set_frame_size(33); // switch to framesize 33 (like WF-RAC). Only 20 or 33 possible
+  mhi_ac_ctrl_core.set_frame_size(MHI_FRAME_SIZE_EXTENDED); // switch to framesize 33 (like WF-RAC). Only 20 or 33 possible
 #endif  
   // mhi_ac_ctrl_core.set_fan(ACFAN_AUTO); // set fan AUTO, see https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99
 }
