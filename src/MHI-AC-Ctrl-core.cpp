@@ -188,7 +188,10 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
       else
         digitalWrite(MISO_PIN, LOW);
 
-      while (!digitalRead(SCK_PIN) != HIGH) {}  // wait for rising edge
+      while (!digitalRead(SCK_PIN) != HIGH) {  // wait for rising edge
+        if ((millis() - startMillis) > max_time_ms)
+          return err_msg_timeout_SCK_low;  // SCK stuck@ low error detection
+      }
 
       if (digitalRead(MOSI_PIN) != HIGH)
         MOSI_byte += bit_mask;
