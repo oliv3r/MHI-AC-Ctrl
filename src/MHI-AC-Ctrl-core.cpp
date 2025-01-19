@@ -331,7 +331,7 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
 
     if(MOSI_frame[DB3] != this->acstatus_troom_old) {
       // To avoid jitter with the fast changing AC internal temperature sensor
-      if (MISO_frame[DB3] != 0xff) {  // not internal sensor used, just publish
+      if (MISO_frame[DB3] != ROOM_TEMPERATURE_INTERNAL_SENSOR) {  // not internal sensor used, just publish
         this->acstatus_troom_old = MOSI_frame[DB3];
         this->status_cb->cbiStatusFunction(ACSTATUS_TROOM, this->acstatus_troom_old);
         last_troom_interval_ms = 0;

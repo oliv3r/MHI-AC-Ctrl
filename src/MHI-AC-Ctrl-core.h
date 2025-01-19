@@ -72,6 +72,8 @@ const uint8_t opdata[][2] PROGMEM = {
 
 #define CBL2 DB26 + 1
 
+#define ROOM_TEMPERATURE_INTERNAL_SENSOR 0xff
+
 enum ErrMsg {  // Error message enum
   FRAME_VALID                =  0,
   ERR_MSG_INVALID_SIGNATURE  = -1,
@@ -233,7 +235,7 @@ class MHI_AC_Ctrl_Core {
     uint8_t vanes_horizontal_0_new = 0;
     uint8_t vanes_horizontal_1_new = 0;
     bool error_operating_data = false;
-    uint8_t troom_new = 0xff;  // writing 0xff to DB3 indicates the usage of the internal room temperature sensor
+    uint8_t troom_new = ROOM_TEMPERATURE_INTERNAL_SENSOR;  // writing 0xff to DB3 indicates the usage of the internal room temperature sensor
     float troom_offset = 0.0;
 
     uint8_t vanes_vertical_0_new = 0;

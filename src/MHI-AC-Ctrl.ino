@@ -194,7 +194,7 @@ class StatusHandler : public CallbackInterfaceStatus {
       float offset = mhi_ac_ctrl_core.get_troom_offset();
       float tmp_value;
 #endif
-      static byte ACSTATUS_TROOM_old=0xff;
+      static byte status_troom_old = ROOM_TEMPERATURE_INTERNAL_SENSOR;
       //Serial.printf_P(PSTR("status=%i value=%i\n"), status, value);
       switch (status) {
         case ACSTATUS_POWER:
@@ -495,7 +495,7 @@ void loop() {
     if (ds18x20_value == DS18X20_NOT_CONNECTED) {
       // fallback to AC internal Troom temperature sensor
       if(troom_was_set_by_DS18X20 ) {  // earlier DS18X20 was working
-        mhi_ac_ctrl_core.set_troom(0xff);  // use IU temperature sensor
+        mhi_ac_ctrl_core.set_troom(ROOM_TEMPERATURE_INTERNAL_SENSOR);  // use IU temperature sensor
         Serial.println(F("DS18X20 disconnected, use IU temperature sensor value!"));
         troom_was_set_by_DS18X20 = false;
         ds18x20_value_old = 0;
@@ -525,7 +525,7 @@ void loop() {
 
   // fallback to AC internal Troom temperature sensor
   if(troom_was_set_by_MQTT & (millis() - room_temp_set_timeout_Millis >= ROOM_TEMP_MQTT_SET_TIMEOUT*1000)) {
-    mhi_ac_ctrl_core.set_troom(0xff);  // use IU temperature sensor
+    mhi_ac_ctrl_core.set_troom(ROOM_TEMPERATURE_INTERNAL_SENSOR);  // use IU temperature sensor
     Serial.println(F("ROOM_TEMP_MQTT_SET_TIMEOUT exceeded, use IU temperature sensor value!"));
     troom_was_set_by_MQTT=false;
   }
