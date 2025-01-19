@@ -1,7 +1,9 @@
 // MHI-AC-Ctrol-core
 // implements the core functions (read & write SPI)
 
+#include <Arduino.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "MHI-AC-Ctrl-core.h"
 

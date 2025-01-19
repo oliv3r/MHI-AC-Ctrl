@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 // comment out the data you are not interested, but at least leave one row !
 const byte opdata[][2] PROGMEM = {
