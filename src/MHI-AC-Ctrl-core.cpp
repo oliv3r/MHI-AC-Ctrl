@@ -8,10 +8,10 @@
 
 #include "MHI-AC-Ctrl-core.h"
 
-uint16_t calc_checksum(uint8_t *frame, size_t len) {
-  uint16_t checksum = 0x0000;
+uint16_t calc_checksum(uint8_t *frame, uint16_t seed, size_t start, size_t len) {
+  uint16_t checksum = seed;
 
-  for (size_t i = 0; i < len; i++)
+  for (size_t i = start; i < len; i++)
     checksum += frame[i];
 
   return checksum;
@@ -180,9 +180,9 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
     MISO_frame[DB17] = 0;
     MISO_frame[DB17] |= this->new_vanes_vertical_0;
     MISO_frame[DB17] |= vanes_3dauto_new;
-    vanes_3dauto_new = 0;
     this->new_vanes_vertical_0 = 0;
     this->new_vanes_vertical_1 = 0;
+    this->vanes_3dauto_new = 0;
 
     if (request_erropData) {
       MISO_frame[DB6] = 0x80;
@@ -193,11 +193,11 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
 
   MISO_frame[DB3] = this->troom_new;  // from MQTT or DS18x20
 
-  uint16_t checksum = calc_checksum(MISO_frame, MHI_FRAME_SIZE_STANDARD);
+  uint16_t checksum = calc_checksum(MISO_frame, 0x00, 0, MHI_FRAME_SIZE_STANDARD);
   MISO_frame[CBH] = highByte(checksum);
   MISO_frame[CBL] = lowByte(checksum);
 
-  checksum = calc_checksum(MISO_frame, MHI_FRAME_SIZE_EXTENDED);
+  checksum = calc_checksum(MISO_frame, checksum, DB15, MHI_FRAME_SIZE_EXTENDED);
   MISO_frame[CBL2] = lowByte(checksum);
 
   // read/write MOSI/MISO frame
@@ -237,12 +237,12 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
   if (((MOSI_frame[SB0] & 0xfe) != 0x6c) | (MOSI_frame[SB1] != 0x80) | (MOSI_frame[SB2] != 0x04))
     return ERR_MSG_INVALID_SIGNATURE;
 
-  checksum = calc_checksum(MOSI_frame, MHI_FRAME_SIZE_STANDARD);
+  checksum = calc_checksum(MOSI_frame, 0x00, 0, MHI_FRAME_SIZE_STANDARD);
   if (((MOSI_frame[CBH] << 8) | MOSI_frame[CBL]) != checksum)
     return ERR_MSG_INVALID_CHECKSUM;
 
   if (this->framesize == MHI_FRAME_SIZE_EXTENDED) {  // Only for framesize 33 (WF-RAC)
-    checksum = calc_checksum(MOSI_frame, MHI_FRAME_SIZE_EXTENDED);
+    checksum = calc_checksum(MOSI_frame, checksum, DB15, MHI_FRAME_SIZE_EXTENDED);
     if (MOSI_frame[CBL2] != lowByte(checksum))
       return ERR_MSG_INVALID_CHECKSUM;
   }
