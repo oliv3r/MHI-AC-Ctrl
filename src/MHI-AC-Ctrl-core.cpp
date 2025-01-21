@@ -214,7 +214,7 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
           return ERR_MSG_TIMEOUT_CLOCK_HIGH;  // SCK stuck@ high error detection
       }
 
-      if ((MISO_frame[byte_cnt] & bit_mask) > 0)
+      if ((MISO_frame[byte_cnt] & bit_mask) == 0)
         digitalWrite(MISO_PIN, HIGH);
       else
         digitalWrite(MISO_PIN, LOW);
