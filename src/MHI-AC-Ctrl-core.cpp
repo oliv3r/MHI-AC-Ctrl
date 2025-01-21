@@ -236,10 +236,10 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
     }
   }
 
-  checksum = calc_checksum(MOSI_frame, MHI_FRAME_SIZE_STANDARD);
   if (((MOSI_frame[SB0] & 0xfe) != 0x6c) | (MOSI_frame[SB1] != 0x80) | (MOSI_frame[SB2] != 0x04))
     return ERR_MSG_INVALID_SIGNATURE;
 
+  checksum = calc_checksum(MOSI_frame, MHI_FRAME_SIZE_STANDARD);
   if (((MOSI_frame[CBH] << 8) | MOSI_frame[CBL]) != checksum)
     return ERR_MSG_INVALID_CHECKSUM;
 
