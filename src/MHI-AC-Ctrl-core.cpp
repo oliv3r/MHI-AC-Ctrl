@@ -175,7 +175,16 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
     this->vanes_horizontal_0_new = 0;
     this->vanes_horizontal_1_new = 0;
 
-    if (this->error_operating_data) {
+    MISO_frame[DB16] = 0;
+    MISO_frame[DB16] |= this->new_vanes_vertical_1;
+    MISO_frame[DB17] = 0;
+    MISO_frame[DB17] |= this->new_vanes_vertical_0;
+    MISO_frame[DB17] |= vanes_3dauto_new;
+    vanes_3dauto_new = 0;
+    this->new_vanes_vertical_0 = 0;
+    this->new_vanes_vertical_1 = 0;
+
+    if (request_erropData) {
       MISO_frame[DB6] = 0x80;
       MISO_frame[DB9] = 0x45;
       this->error_operating_data = false;
@@ -188,19 +197,8 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
   MISO_frame[CBH] = highByte(checksum);
   MISO_frame[CBL] = lowByte(checksum);
 
-  if (this->framesize == MHI_FRAME_SIZE_EXTENDED) {  // Only for framesize 33 (WF-RAC)
-    MISO_frame[DB16] = 0;
-    MISO_frame[DB16] |= this->new_vanes_vertical_1;
-    MISO_frame[DB17] = 0;
-    MISO_frame[DB17] |= this->new_vanes_vertical_0;
-    MISO_frame[DB17] |= vanes_3dauto_new;
-    vanes_3dauto_new = 0;
-    this->new_vanes_vertical_0 = 0;
-    this->new_vanes_vertical_1 = 0;
-
-    checksum = calc_checksum(MISO_frame, MHI_FRAME_SIZE_EXTENDED);
-    MISO_frame[CBL2] = lowByte(checksum);
-  }
+  checksum = calc_checksum(MISO_frame, MHI_FRAME_SIZE_EXTENDED);
+  MISO_frame[CBL2] = lowByte(checksum);
 
   // read/write MOSI/MISO frame
   for (uint8_t byte_cnt = 0; byte_cnt < this->framesize; byte_cnt++) {  // read and write a data packet of 20 bytes
