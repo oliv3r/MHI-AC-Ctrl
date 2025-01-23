@@ -258,17 +258,76 @@ class MHI_AC_Ctrl_Core {
     void init();                          // initialization called once after boot
     void reset_old_values();              // resets the 'old' variables ensuring that all status information are resend
     int loop(uint32_t max_time_ms);            // receive / transmit a frame of 20 uint8_ts
-    void set_power(enum ACPower power);        // power on/off the AC
-    void set_mode(enum ACMode mode);           // change AC mode (e.g. heat, dry, cool etc.)
-    void set_tsetpoint(uint8_t tsetpoint);   // set the target temperature of the AC)
-    void set_fan(uint fan);               // set the requested fan speed
-    void set_fan(enum ACFan fan);         // set the requested fan speed
-    void set_vanes_horizontal(enum ACVanesHorizontal vanes);  // set the vanes horizontal position (or swing)
-    void set_troom(uint8_t temperature);     // set the room temperature used by AC (0xff indicates the usage of the internal room temperature sensor)
-    void enable_error_operating_data();             // request that the AC provides the error data
-    float get_troom_offset();             // get troom offset, only usefull when ENHANCED_RESOLUTION is used
-    void set_troom_offset(float offset);  // set troom offset, only usefull when ENHANCED_RESOLUTION is used
-    void set_frame_size(enum mhi_frame_size framesize);  // set framesize to 20 or 33
-    void set_3dauto(enum AC3Dauto vanes_3dauto);  // set the 3D auto mode on or off
-    void set_vanes_vertical(enum ACVanesVertical vanes);  // set the vanes LR (vertical) position
+
+    // power on/off the AC
+    void set_power(enum ACPower power) {
+      this->power_new = 0b10 | power;
+    }
+
+    // change AC mode (e.g. heat, dry, cool etc.)
+    void set_mode(enum ACMode mode) {
+      this->mode_new = 0b00100000 | mode;
+    }
+
+    // set the target temperature of the AC)
+    void set_tsetpoint(uint8_t tsetpoint) {
+      this->tsetpoint_new = 0b10000000 | tsetpoint;
+    }
+
+    // set the requested fan speed
+    void set_fan(enum ACFan fan) {
+      this->fan_new = 0b00001000 | fan;
+    }
+
+    // set the vanes horizontal position (or swing)
+    void set_vanes_horizontal(enum ACVanesHorizontal vanes) {
+      if (vanes == ACVANES_HORIZONTAL_SWING) {
+        this->vanes_horizontal_0_new = 0b00001011;  // enable swing
+      }
+      else {
+        this->vanes_horizontal_0_new = 0b00001010;  // disable swing
+        this->vanes_horizontal_1_new = 0b00010000 | (vanes - 1);
+      }
+    }
+
+    // set the room temperature used by AC (0xff indicates the usage of the internal room temperature sensor)
+    void MHI_AC_Ctrl_Core::set_troom(uint8_t troom) {
+      this->troom_new = troom;
+    }
+
+    // request that the AC provides the error data
+    void MHI_AC_Ctrl_Core::enable_error_operating_data() {
+      this->error_operating_data = true;
+    }
+
+    // get troom offset, only usefull when ENHANCED_RESOLUTION is used
+    float MHI_AC_Ctrl_Core::get_troom_offset() {
+      return this->troom_offset;
+    }
+
+   // set troom offset, only usefull when ENHANCED_RESOLUTION is used
+    void MHI_AC_Ctrl_Core::set_troom_offset(float offset) {
+      this->troom_offset = offset;
+    }
+
+    // set framesize to 20 or 33
+    void MHI_AC_Ctrl_Core::set_frame_size(enum mhi_frame_size framesize) {
+      this->framesize = framesize;
+    }
+
+    // set the 3D auto mode on or off
+    void set_3dauto(enum AC3Dauto vanes_3dauto) {
+      vanes_3dauto_new = 0b00001010 | vanes_3dauto;
+    }
+
+    // set the vanes LR (vertical) position
+    void set_vanes_vertical(enum ACVanesVertical vanes) {
+      if (vanes == ACVANES_VERTICAL_SWING) {
+        this->vanes_vertical_0_new = 0b11000000;  // enable swing
+      }
+      else {
+        this->vanes_vertical_0_new = 0b10000000;  // disable swing
+        this->vanes_vertical_1_new = 0b10000000 | ((vanes - 1) << 4);
+      }
+    }
 };

@@ -59,66 +59,6 @@ void MHI_AC_Ctrl_Core::init() {
   MHI_AC_Ctrl_Core::reset_old_values();
 }
 
-void MHI_AC_Ctrl_Core::set_power(enum ACPower power) {
-  this->power_new = 0b10 | power;
-}
-
-void MHI_AC_Ctrl_Core::set_mode(enum ACMode mode) {
-  this->mode_new = 0b00100000 | mode;
-}
-
-void MHI_AC_Ctrl_Core::set_tsetpoint(uint8_t tsetpoint) {
-  this->tsetpoint_new = 0b10000000 | tsetpoint;
-}
-
-void MHI_AC_Ctrl_Core::set_fan(enum ACFan fan) {
-  this->fan_new = 0b00001000 | fan;
-}
-
-void MHI_AC_Ctrl_Core::set_3dauto(enum AC3Dauto vanes_3dauto) {
-  vanes_3dauto_new = 0b00001010 | vanes_3dauto;
-}
-
-void MHI_AC_Ctrl_Core::set_vanes_vertical(enum ACVanesVertical vanes) {
-  if (vanes == ACVANES_VERTICAL_SWING) {
-    this->vanes_vertical_0_new = 0b11000000;  // enable swing
-  }
-  else {
-    this->vanes_vertical_0_new = 0b10000000;  // disable swing
-    this->vanes_vertical_1_new = 0b10000000 | ((vanes - 1) << 4);
-  }
-}
-
-void MHI_AC_Ctrl_Core::set_vanes_horizontal(enum ACVanesHorizontal vanes) {
-  if (vanes == ACVANES_HORIZONTAL_SWING) {
-    this->vanes_horizontal_0_new = 0b00001011;  // enable swing
-  }
-  else {
-    this->vanes_horizontal_0_new = 0b00001010;  // disable swing
-    this->vanes_horizontal_1_new = 0b00010000 | (vanes - 1);
-  }
-}
-
-void MHI_AC_Ctrl_Core::enable_error_operating_data() {
-  this->error_operating_data = true;
-}
-
-void MHI_AC_Ctrl_Core::set_troom(uint8_t troom) {
-  this->troom_new = troom;
-}
-
-float MHI_AC_Ctrl_Core::get_troom_offset() {
-  return this->troom_offset;
-}
-
-void MHI_AC_Ctrl_Core::set_troom_offset(float offset) {
-  this->troom_offset = offset;
-}
-
-void MHI_AC_Ctrl_Core::set_frame_size(enum mhi_frame_size framesize) {
-  this->frameSize = framesize;
-}
-
 int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
   const uint8_t opdata_cnt = sizeof(opdata) / sizeof(uint8_t) / 2;
   static uint8_t opdata_no = 0;              //
