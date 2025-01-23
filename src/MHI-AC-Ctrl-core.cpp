@@ -67,7 +67,7 @@ void MHI_AC_Ctrl_Core::init() {
   MHI_AC_Ctrl_Core::reset_old_values();
 }
 
-void MHI_AC_Ctrl_Core::set_power(bool power) {
+void MHI_AC_Ctrl_Core::set_power(enum ACPower power) {
   this->power_new = 0b10 | power;
 }
 

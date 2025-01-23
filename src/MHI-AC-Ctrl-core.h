@@ -250,8 +250,8 @@ class MHI_AC_Ctrl_Core {
 
     void init();                          // initialization called once after boot
     void reset_old_values();              // resets the 'old' variables ensuring that all status information are resend
-    int loop(uint32_t max_time_ms);       // receive / transmit a frame of 20 uint8_ts
-    void set_power(bool power);        // power on/off the AC
+    int loop(uint32_t max_time_ms);            // receive / transmit a frame of 20 uint8_ts
+    void set_power(enum ACPower power);        // power on/off the AC
     void set_mode(ACMode mode);           // change AC mode (e.g. heat, dry, cool etc.)
     void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)
     void set_fan(uint fan);               // set the requested fan speed
