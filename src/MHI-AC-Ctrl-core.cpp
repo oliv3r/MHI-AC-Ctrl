@@ -1,6 +1,8 @@
 // MHI-AC-Ctrol-core
 // implements the core functions (read & write SPI)
 
+#include <stdbool.h>
+
 #include "MHI-AC-Ctrl-core.h"
 
 uint16_t calc_checksum(byte* frame) {
@@ -59,7 +61,7 @@ void MHI_AC_Ctrl_Core::init() {
   MHI_AC_Ctrl_Core::reset_old_values();
 }
 
-void MHI_AC_Ctrl_Core::set_power(boolean power) {
+void MHI_AC_Ctrl_Core::set_power(bool power) {
   new_Power = 0b10 | power;
 }
 

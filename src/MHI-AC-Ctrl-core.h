@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <stdbool.h>
 
 // comment out the data you are not interested, but at least leave one row !
 const byte opdata[][2] PROGMEM = {
@@ -174,7 +175,7 @@ class MHI_AC_Ctrl_Core {
     void init();                          // initialization called once after boot
     void reset_old_values();              // resets the 'old' variables ensuring that all status information are resend
     int loop(uint max_time_ms);            // receive / transmit a frame of 20 bytes
-    void set_power(boolean power);        // power on/off the AC
+    void set_power(bool power);           // power on/off the AC
     void set_mode(ACMode mode);           // change AC mode (e.g. heat, dry, cool etc.)
     void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)
     void set_fan(uint fan);               // set the requested fan speed
