@@ -253,7 +253,7 @@ class MHI_AC_Ctrl_Core {
     int loop(uint32_t max_time_ms);            // receive / transmit a frame of 20 uint8_ts
     void set_power(enum ACPower power);        // power on/off the AC
     void set_mode(enum ACMode mode);           // change AC mode (e.g. heat, dry, cool etc.)
-    void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)
+    void set_tsetpoint(uint8_t tsetpoint);   // set the target temperature of the AC)
     void set_fan(uint fan);               // set the requested fan speed
     void set_fan(enum ACFan fan);         // set the requested fan speed
     void set_vanes_horizontal(enum ACVanesHorizontal vanes);  // set the vanes horizontal position (or swing)

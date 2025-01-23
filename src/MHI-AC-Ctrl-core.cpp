@@ -75,7 +75,7 @@ void MHI_AC_Ctrl_Core::set_mode(enum ACMode mode) {
   this->mode_new = 0b00100000 | mode;
 }
 
-void MHI_AC_Ctrl_Core::set_tsetpoint(uint tsetpoint) {
+void MHI_AC_Ctrl_Core::set_tsetpoint(uint8_t tsetpoint) {
   this->tsetpoint_new = 0b10000000 | tsetpoint;
 }
 
@@ -141,8 +141,8 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
   //                            sb0   sb1   sb2   db0   db1   db2   db3   db4   db5   db6   db7   db8   db9  db10  db11  db12  db13  db14  chkH  chkL  db15  db16  db17  db18  db19  db20  db21  db22  db23  db24  db25  db26  chk2L
   static uint8_t MISO_frame[] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x22 };
 
-  static uint call_counter = 0;                     // counts how often this loop was called
-  static uint32_t last_troom_interval_ms = 0;  // remember when Troom internal has changed
+  static uint32_t call_counter = 0;                     // counts how often this loop was called
+  static uint32_t last_troom_interval_ms = 0; // remember when Troom internal has changed
 
   if (this->framesize == 33)
     MISO_frame[0] = 0xAA;
@@ -309,14 +309,14 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
       this->status_cb->cbiStatusFunction(ACSTATUS_POWER, this->acstatus_power_old);
     }
 
-    uint fantmp = MOSI_frame[DB1] & 0x07;
+    uint8_t fantmp = MOSI_frame[DB1] & 0x07;
     if (fantmp != this->acstatus_fan_old) {
       this->acstatus_fan_old = fantmp;
       this->status_cb->cbiStatusFunction(ACSTATUS_FAN, this->acstatus_fan_old);
     }
 
     // Only updated when Vanes command via wired RC
-    uint vanes_horizontal_tmp = (MOSI_frame[DB0] & 0xc0) + ((MOSI_frame[DB1] & 0xB0) >> 4);
+    uint8_t vanes_horizontal_tmp = (MOSI_frame[DB0] & 0xc0) + ((MOSI_frame[DB1] & 0xB0) >> 4);
     if (vanes_horizontal_tmp != this->ACSTATUS_VANES_HORIZONTAL_old) {
       if ((vanes_horizontal_tmp & 0x88) == 0)  // last vanes update was via IR-RC, so status is not known
         this->status_cb->cbiStatusFunction(status_horizontal_vanes, ACVANES_HORIZONTAL_UNKNOWN);
