@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 // comment out the data you are not interested, but at least leave one row !
-const byte opdata[][2] PROGMEM = {
+const uint8_t opdata[][2] PROGMEM = {
   { 0xc0, 0x02 },  //  1 "MODE"
   { 0xc0, 0x05 },  //  2 "SET-TEMP" [°C]
   { 0xc0, 0x80 },  //  3 "RETURN-AIR" [°C]
@@ -184,54 +184,54 @@ class CallbackInterfaceStatus {
 class MHI_AC_Ctrl_Core {
   private:
     // old status
-    byte status_power_old;
-    byte status_mode_old;
-    byte status_fan_old;
-    byte status_vanes_horizontal_old;
-    byte status_troom_old;
-    byte status_tsetpoint_old;
-    byte status_errorcode_old;
+    uint8_t status_power_old;
+    uint8_t status_mode_old;
+    uint8_t status_fan_old;
+    uint8_t status_vanes_horizontal_old;
+    uint8_t status_troom_old;
+    uint8_t status_tsetpoint_old;
+    uint8_t status_errorcode_old;
 
-    byte status_vanes_vertical_old;
-    byte status_3dauto_old;
+    uint8_t status_vanes_vertical_old;
+    uint8_t status_3dauto_old;
 
     // old operating data
     uint16_t op_kwh;
-    byte op_mode;
-    byte op_indoor_temperature;
-    byte op_indoor_temperature_return_air;
-    byte op_indoor_fanspeed;
-    byte op_indoor_temperature_ubend;
-    byte op_indoor_temperature_capillary;
-    byte op_indoor_temperature_suction_header;
-    byte op_indoor_total_runtime;
-    byte op_outdoor_temperature;
-    byte op_outdoor_temperature_heat_exchanger;
-    byte op_outdoor_total_compressor_runtime;
-    byte op_outdoor_ct_current;
-    byte op_outdoor_temperature_dsh;
-    byte op_outdoor_protection_no;
-    byte op_outdoor_fanspeed;
-    byte op_outdoor_defrost;
+    uint8_t op_mode;
+    uint8_t op_indoor_temperature;
+    uint8_t op_indoor_temperature_return_air;
+    uint8_t op_indoor_fanspeed;
+    uint8_t op_indoor_temperature_ubend;
+    uint8_t op_indoor_temperature_capillary;
+    uint8_t op_indoor_temperature_suction_header;
+    uint8_t op_indoor_total_runtime;
+    uint8_t op_outdoor_temperature;
+    uint8_t op_outdoor_temperature_heat_exchanger;
+    uint8_t op_outdoor_total_compressor_runtime;
+    uint8_t op_outdoor_ct_current;
+    uint8_t op_outdoor_temperature_dsh;
+    uint8_t op_outdoor_protection_no;
+    uint8_t op_outdoor_fanspeed;
+    uint8_t op_outdoor_defrost;
     uint16_t op_outdoor_compressor_frequency;
-    byte op_outdoor_temperature_d;
+    uint8_t op_outdoor_temperature_d;
     uint16_t op_outdoor_eev1;
 
     // for writing to AC
-    byte power_new = 0;
-    byte mode_new = 0;
-    byte tsetpoint_new = 0;
-    byte fan_new = 0;
-    byte vanes_horizontal_0_new = 0;
-    byte vanes_horizontal_1_new = 0;
+    uint8_t power_new = 0;
+    uint8_t mode_new = 0;
+    uint8_t tsetpoint_new = 0;
+    uint8_t fan_new = 0;
+    uint8_t vanes_horizontal_0_new = 0;
+    uint8_t vanes_horizontal_1_new = 0;
     bool error_operating_data = false;
-    byte troom_new = 0xff;  // writing 0xff to DB3 indicates the usage of the internal room temperature sensor
+    uint8_t troom_new = 0xff;  // writing 0xff to DB3 indicates the usage of the internal room temperature sensor
     float troom_offset = 0.0;
 
-    byte vanes_vertical_0_new = 0;
-    byte vanes_vertical_1_new = 0;
-    byte vanes_3dauto_new = 0;
-    byte framesize = 20;
+    uint8_t vanes_vertical_0_new = 0;
+    uint8_t vanes_vertical_1_new = 0;
+    uint8_t vanes_3dauto_new = 0;
+    uint8_t framesize = 20;
 
     CallbackInterfaceStatus *status_cb;
 
@@ -242,17 +242,17 @@ class MHI_AC_Ctrl_Core {
 
     void init();                          // initialization called once after boot
     void reset_old_values();              // resets the 'old' variables ensuring that all status information are resend
-    int loop(uint max_time_ms);           // receive / transmit a frame of 20 bytes
-    void set_power(bool power);           // power on/off the AC
+    int loop(uint max_time_ms);            // receive / transmit a frame of 20 uint8_ts
+    void set_power(bool power);        // power on/off the AC
     void set_mode(ACMode mode);           // change AC mode (e.g. heat, dry, cool etc.)
     void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)
     void set_fan(uint fan);               // set the requested fan speed
     void set_vanes_horizontal(uint vanes);  // set the vanes horizontal position (or swing)
-    void set_troom(byte temperature);     // set the room temperature used by AC (0xff indicates the usage of the internal room temperature sensor)
+    void set_troom(uint8_t temperature);     // set the room temperature used by AC (0xff indicates the usage of the internal room temperature sensor)
     void enable_error_operating_data();             // request that the AC provides the error data
     float get_troom_offset();             // get troom offset, only usefull when ENHANCED_RESOLUTION is used
     void set_troom_offset(float offset);  // set troom offset, only usefull when ENHANCED_RESOLUTION is used
-    void set_frame_size(byte framesize);  // set framesize to 20 or 33
+    void set_frame_size(uint8_t framesize);  // set framesize to 20 or 33
     void set_3dauto(AC3Dauto vanes_3dauto); // set the 3D auto mode on or off
     void set_vanes_vertical(uint vanes);  // set the vanes LR (vertical) position
 };

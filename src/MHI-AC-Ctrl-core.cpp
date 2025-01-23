@@ -7,7 +7,7 @@
 
 #include "MHI-AC-Ctrl-core.h"
 
-uint16_t calc_checksum(byte *frame) {
+uint16_t calc_checksum(uint8_t *frame) {
   uint16_t checksum = 0;
 
   for (int i = 0; i < CBH; i++)
@@ -16,7 +16,7 @@ uint16_t calc_checksum(byte *frame) {
   return checksum;
 }
 
-uint16_t calc_checksumFrame33(byte *frame) {
+uint16_t calc_checksumFrame33(uint8_t *frame) {
   uint16_t checksum = 0;
 
   for (int i = 0; i < CBL2; i++)
@@ -111,7 +111,7 @@ void MHI_AC_Ctrl_Core::enable_error_operating_data() {
   this->error_operating_data = true;
 }
 
-void MHI_AC_Ctrl_Core::set_troom(byte troom) {
+void MHI_AC_Ctrl_Core::set_troom(uint8_t troom) {
   this->troom_new = troom;
 }
 
@@ -123,23 +123,23 @@ void MHI_AC_Ctrl_Core::set_troom_offset(float offset) {
   this->troom_offset = offset;
 }
 
-void MHI_AC_Ctrl_Core::set_frame_size(byte framesize) {
+void MHI_AC_Ctrl_Core::set_frame_size(uint8_t framesize) {
   if (framesize == 20 || framesize == 33)
     this->framesize = framesize;
 }
 
 int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
-  const byte opdata_cnt = sizeof(opdata) / sizeof(byte) / 2;
-  static byte opdata_no = 0;              //
+  const uint8_t opdata_cnt = sizeof(opdata) / sizeof(uint8_t) / 2;
+  static uint8_t opdata_no = 0;              //
   long start_ms = millis();           // start time of this loop run
-  byte MOSI_byte;                        // received MOSI byte
+  uint8_t MOSI_byte;                        // received MOSI byte
   bool new_datapacket_received = false;  // indicated that a new frame was received
-  static byte erropdata_cnt = 0;          // number of expected error operating data
+  static uint8_t erropdata_cnt = 0;          // number of expected error operating data
   static bool doubleframe = false;
   static int frame = 1;
-  static byte MOSI_frame[33];
+  static uint8_t MOSI_frame[33];
   //                            sb0   sb1   sb2   db0   db1   db2   db3   db4   db5   db6   db7   db8   db9  db10  db11  db12  db13  db14  chkH  chkL  db15  db16  db17  db18  db19  db20  db21  db22  db23  db24  db25  db26  chk2L
-  static byte MISO_frame[] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x22 };
+  static uint8_t MISO_frame[] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x22 };
 
   static uint call_counter = 0;                     // counts how often this loop was called
   static unsigned long last_troom_interval_ms = 0; // remember when Troom internal has changed
@@ -242,7 +242,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   // read/write MOSI/MISO frame
   for (uint8_t byte_cnt = 0; byte_cnt < this->framesize; byte_cnt++) {  // read and write a data packet of 20 bytes
     MOSI_byte = 0;
-    byte bit_mask = 1;
+    uint8_t bit_mask = 1;
     for (uint8_t bit_cnt = 0; bit_cnt < 8; bit_cnt++) {  // read and write 1 byte
       clock_ms = millis();
 
@@ -284,7 +284,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
 
   if (new_datapacket_received) {
     if (this->framesize == 33) {  // Only for framesize 33 (WF-RAC)
-      byte vanes_vertical_tmp = (MOSI_frame[DB16] & 0x07) + ((MOSI_frame[DB17] & 0x01) << 4);
+      uint8_t vanes_vertical_tmp = (MOSI_frame[DB16] & 0x07) + ((MOSI_frame[DB17] & 0x01) << 4);
       if (vanes_vertical_tmp != this->status_vertical_old) {  // Vanes Left Right
         if ((vanes_vertical_tmp & 0x10) != 0)  // Vanes LR status swing
           this->status_cb->cbiStatusFunction(ACSTATUS_VANES_VERTICAL, ACVANES_VERTICAL_SWING);
