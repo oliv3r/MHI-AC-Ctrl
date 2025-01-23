@@ -110,12 +110,12 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
   }
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_VANES)) == 0) {
     if (strcmp_P((char*)payload, PSTR(PAYLOAD_VANES_SWING)) == 0) {
-      mhi_ac_ctrl_core.set_vanes(vanes_swing);
+      mhi_ac_ctrl_core.set_vanes_horizontal(vanesHorizontal_swing);
       publish_cmd_ok();
     }
     else {
       if ((atoi((char*)payload) >= 1) & (atoi((char*)payload) <= 5)) {
-        mhi_ac_ctrl_core.set_vanes(atoi((char*)payload));
+        mhi_ac_ctrl_core.set_vanes_horizontal(atoi((char*)payload));
         publish_cmd_ok();
       }
       else
@@ -125,12 +125,12 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
 #ifdef USE_EXTENDED_FRAME_SIZE  
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_VANESLR)) == 0) {
     if (strcmp_P((char*)payload, PSTR(PAYLOAD_VANESLR_SWING)) == 0) {
-      mhi_ac_ctrl_core.set_vanesLR(vanesLR_swing);
+      mhi_ac_ctrl_core.set_vanes_vertical(vanesVertical_swing);
       publish_cmd_ok();
     }
     else {
       if ((atoi((char*)payload) >= 1) & (atoi((char*)payload) <= 7)) {
-        mhi_ac_ctrl_core.set_vanesLR(atoi((char*)payload));
+        mhi_ac_ctrl_core.set_vanes_vertical(atoi((char*)payload));
         publish_cmd_ok();
       }
       else
@@ -139,11 +139,11 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
   }
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_3DAUTO)) == 0) {
     if (strcmp_P((char*)payload, PSTR(PAYLOAD_3DAUTO_ON)) == 0) {
-      mhi_ac_ctrl_core.set_3Dauto(Dauto_on);
+      mhi_ac_ctrl_core.set_3dauto(Dauto_on);
       publish_cmd_ok();
     }
     else if (strcmp_P((char*)payload, PSTR(PAYLOAD_3DAUTO_OFF)) == 0) {
-      mhi_ac_ctrl_core.set_3Dauto(Dauto_off);
+      mhi_ac_ctrl_core.set_3dauto(Dauto_off);
       publish_cmd_ok();
     }
     else
@@ -167,7 +167,7 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
       publish_cmd_invalidparameter();
   }
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_REQUEST_ERROPDATA)) == 0) {
-    mhi_ac_ctrl_core.request_ErrOpData();
+    mhi_ac_ctrl_core.enable_error_operating_data();
     publish_cmd_ok();
   }
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_REQUEST_RESET)) == 0) {
@@ -286,12 +286,12 @@ class StatusHandler : public CallbackInterface_Status {
               break;              
           }
           break;
-        case status_vanes:
+        case status_vanes_horizontal:
           switch (value) {
-            case vanes_unknown:
+            case vanesHorizontal_unknown:
               output_P(status, PSTR(TOPIC_VANES), PSTR(PAYLOAD_VANES_UNKNOWN));
               break;
-            case vanes_swing:
+            case vanesHorizontal_swing:
               output_P(status, PSTR(TOPIC_VANES), PSTR(PAYLOAD_VANES_SWING));
               break;
             default:
@@ -300,9 +300,9 @@ class StatusHandler : public CallbackInterface_Status {
           }
           break;
 #ifdef USE_EXTENDED_FRAME_SIZE            
-        case status_vanesLR:
+        case status_vanes_vertical:
           switch (value) {
-            case vanesLR_swing:
+            case vanesVertical_swing:
               output_P(status, PSTR(TOPIC_VANESLR), PSTR(PAYLOAD_VANESLR_SWING));
               break;
             default:
@@ -310,12 +310,12 @@ class StatusHandler : public CallbackInterface_Status {
               output_P(status, PSTR(TOPIC_VANESLR), strtmp);
           }
           break;
-        case status_3Dauto:
+        case status_3dauto:
           switch (value) {
-            case Dauto_on:
+            case vanes_3dauto_on:
               output_P(status, PSTR(TOPIC_3DAUTO), PSTR(PAYLOAD_3DAUTO_ON));
               break;
-            case Dauto_off:
+            case vanes_3dauto_off:
               output_P(status, PSTR(TOPIC_3DAUTO), PSTR(PAYLOAD_3DAUTO_OFF));
               break;
           }
@@ -458,7 +458,7 @@ void setup() {
   setupOTA();
   MQTTclient.setServer(MQTT_SERVER, MQTT_PORT);
   MQTTclient.setCallback(MQTT_subscribe_callback);
-  mhi_ac_ctrl_core.MHIAcCtrlStatus(&mhiStatusHandler);
+  mhi_ac_ctrl_core.MHI_AC_ctrl_status(&mhiStatusHandler);
   mhi_ac_ctrl_core.init();
 #ifdef USE_EXTENDED_FRAME_SIZE    
   mhi_ac_ctrl_core.set_frame_size(33); // switch to framesize 33 (like WF-RAC). Only 20 or 33 possible

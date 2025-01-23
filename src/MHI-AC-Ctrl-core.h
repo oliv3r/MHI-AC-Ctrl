@@ -90,11 +90,11 @@ enum ACStatus {  // Status enum
   status_power = type_status,
   status_mode,
   status_fan,
-  status_vanes,
-  status_vanesLR,
-  status_3Dauto,
+  status_vanes_horizontal,
+  status_vanes_vertical,
+  status_3dauto,
   status_troom,
-  status_tsetpoint
+  status_tsetpoint,
   status_errorcode,
 
   opdata_mode = type_opdata,
@@ -151,34 +151,34 @@ enum ACMode {  // Mode enum
   mode_heat = 0b00010000,
 };
 
-enum ACVanes {  // Vanes enum
-  vanes_unknown = 0,
-  vanes_1       = 1,
-  vanes_2       = 2,
-  vanes_3       = 3,
-  vanes_4       = 4,
-  vanes_swing   = 5,
+enum ACVanesHorizontal {  // Vanes enum
+  vanesHorizontal_unknown = 0,
+  vanesHorizontal_1       = 1,
+  vanesHorizontal_2       = 2,
+  vanesHorizontal_3       = 3,
+  vanesHorizontal_4       = 4,
+  vanesHorizontal_swing   = 5,
 };
 
-enum ACVanesLR {  // Vanes Left Right enum
-  vanesLR_1     = 1,
-  vanesLR_2     = 2,
-  vanesLR_3     = 3,
-  vanesLR_4     = 4,
-  vanesLR_5     = 5,
-  vanesLR_6     = 6,
-  vanesLR_7     = 7,
-  vanesLR_swing = 8,
+enum ACVanesVertical {  // Vanes Left Right enum
+  vanesVertical_1     = 1,
+  vanesVertical_2     = 2,
+  vanesVertical_3     = 3,
+  vanesVertical_4     = 4,
+  vanesVertical_5     = 5,
+  vanesVertical_6     = 6,
+  vanesVertical_7     = 7,
+  vanesVertical_swing = 8,
 };
 
 enum AC3Dauto {  // 3D auto enum
-  Dauto_off = 0b00000000,
-  Dauto_on  = 0b00000100,
+  vanes_3dauto_off = 0b00000000,
+  vanes_3dauto_on  = 0b00000100,
 };
 
 class CallbackInterface_Status {
   public:
-    virtual void cbiStatusFunction(ACStatus status, int value) = 0;
+    virtual void status_cb(ACStatus status, int value) = 0;
 };
 
 class MHI_AC_Ctrl_Core {
@@ -187,57 +187,57 @@ class MHI_AC_Ctrl_Core {
     byte status_power_old;
     byte status_mode_old;
     byte status_fan_old;
-    byte status_vanes_old;
+    byte status_vanes_horizontal_old;
     byte status_troom_old;
     byte status_tsetpoint_old;
     byte status_errorcode_old;
 
-    byte status_vanesLR_old;
-    byte status_3Dauto_old;
+    byte status_vanes_vertical_old;
+    byte status_3dauto_old;
 
     // old operating data
-    uint16_t op_kwh_old;
-    byte op_mode_old;
-    byte op_settemp_old;
-    byte op_return_air_old;
-    byte op_iu_fanspeed_old;
-    byte op_thi_r1_old;
-    byte op_thi_r2_old;
-    byte op_thi_r3_old;
-    byte op_total_iu_run_old;
-    byte op_outdoor_old;
-    byte op_tho_r1_old;
-    byte op_total_comp_run_old;
-    byte op_ct_old;
-    byte op_tdsh_old;
-    byte op_protection_no_old;
-    byte op_ou_fanspeed_old;
-    byte op_defrost_old;
-    uint16_t op_comp_old;
-    byte op_td_old;
-    uint16_t op_ou_eev1_old;
+    uint16_t op_kwh;
+    byte op_mode;
+    byte op_indoor_temperature;
+    byte op_indoor_temperature_return_air;
+    byte op_indoor_fanspeed;
+    byte op_indoor_temperature_ubend;
+    byte op_indoor_temperature_capillary;
+    byte op_indoor_temperature_suction_header;
+    byte op_indoor_total_runtime;
+    byte op_outdoor_temperature;
+    byte op_outdoor_temperature_heat_exchanger;
+    byte op_outdoor_total_compressor_runtime;
+    byte op_outdoor_ct_current;
+    byte op_outdoor_temperature_dsh;
+    byte op_outdoor_protection_no;
+    byte op_outdoor_fanspeed;
+    byte op_outdoor_defrost;
+    uint16_t op_outdoor_compressor_frequency;
+    byte op_outdoor_temperature_d;
+    uint16_t op_outdoor_eev1;
 
     // for writing to AC
-    byte new_Power = 0;
-    byte new_Mode = 0;
-    byte new_Tsetpoint = 0;
-    byte new_Fan = 0;
-    byte new_Vanes0 = 0;
-    byte new_Vanes1 = 0;
-    bool request_erropData = false;
-    byte new_Troom = 0xff;  // writing 0xff to DB3 indicates the usage of the internal room temperature sensor
-    float Troom_offset = 0.0;
+    byte power_new = 0;
+    byte mode_new = 0;
+    byte tsetpoint_new = 0;
+    byte fan_new = 0;
+    byte vanes_horizontal_0_new = 0;
+    byte vanes_horizontal_1_new = 0;
+    bool error_operating_data = false;
+    byte troom_new = 0xff;  // writing 0xff to DB3 indicates the usage of the internal room temperature sensor
+    float troom_offset = 0.0;
 
-    byte new_VanesLR0 = 0;
-    byte new_VanesLR1 = 0;
-    byte new_3Dauto = 0;
-    byte frameSize = 20;
+    byte vanes_vertical_0_new = 0;
+    byte vanes_vertical_1_new = 0;
+    byte vanes_3dauto_new = 0;
+    byte framesize = 20;
 
-    CallbackInterface_Status *m_cbiStatus;
+    CallbackInterface_Status *status_cb;
 
   public:
-    void MHIAcCtrlStatus(CallbackInterface_Status *cb) {
-      m_cbiStatus = cb;
+    void MHI_AC_ctrl_status(CallbackInterface_Status *cb) {
+      status_cb = cb;
     };
 
     void init();                          // initialization called once after boot
@@ -247,12 +247,12 @@ class MHI_AC_Ctrl_Core {
     void set_mode(ACMode mode);           // change AC mode (e.g. heat, dry, cool etc.)
     void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)
     void set_fan(uint fan);               // set the requested fan speed
-    void set_vanes(uint vanes);           // set the vanes horizontal position (or swing)
+    void set_vanes_horizontal(uint vanes);  // set the vanes horizontal position (or swing)
     void set_troom(byte temperature);     // set the room temperature used by AC (0xff indicates the usage of the internal room temperature sensor)
-    void request_ErrOpData();             // request that the AC provides the error data
+    void enable_error_operating_data();             // request that the AC provides the error data
     float get_troom_offset();             // get troom offset, only usefull when ENHANCED_RESOLUTION is used
     void set_troom_offset(float offset);  // set troom offset, only usefull when ENHANCED_RESOLUTION is used
     void set_frame_size(byte framesize);  // set framesize to 20 or 33
-    void set_3Dauto(AC3Dauto Dauto);      // set the 3D auto mode on or off
-    void set_vanesLR(uint vanesLR);       // set the vanes LR (vertical) position
+    void set_3dauto(AC3Dauto vanes_3dauto); // set the 3D auto mode on or off
+    void set_vanes_vertical(uint vanes);  // set the vanes LR (vertical) position
 };
