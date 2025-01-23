@@ -252,7 +252,7 @@ class MHI_AC_Ctrl_Core {
     void reset_old_values();              // resets the 'old' variables ensuring that all status information are resend
     int loop(uint32_t max_time_ms);            // receive / transmit a frame of 20 uint8_ts
     void set_power(enum ACPower power);        // power on/off the AC
-    void set_mode(ACMode mode);           // change AC mode (e.g. heat, dry, cool etc.)
+    void set_mode(enum ACMode mode);           // change AC mode (e.g. heat, dry, cool etc.)
     void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)
     void set_fan(uint fan);               // set the requested fan speed
     void set_fan(enum ACFan fan);         // set the requested fan speed
@@ -262,6 +262,6 @@ class MHI_AC_Ctrl_Core {
     float get_troom_offset();             // get troom offset, only usefull when ENHANCED_RESOLUTION is used
     void set_troom_offset(float offset);  // set troom offset, only usefull when ENHANCED_RESOLUTION is used
     void set_frame_size(uint8_t framesize);  // set framesize to 20 or 33
-    void set_3dauto(AC3Dauto vanes_3dauto); // set the 3D auto mode on or off
+    void set_3dauto(enum AC3Dauto vanes_3dauto); // set the 3D auto mode on or off
     void set_vanes_vertical(uint vanes);  // set the vanes LR (vertical) position
 };

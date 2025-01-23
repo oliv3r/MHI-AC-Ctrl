@@ -71,7 +71,7 @@ void MHI_AC_Ctrl_Core::set_power(enum ACPower power) {
   this->power_new = 0b10 | power;
 }
 
-void MHI_AC_Ctrl_Core::set_mode(ACMode mode) {
+void MHI_AC_Ctrl_Core::set_mode(enum ACMode mode) {
   this->mode_new = 0b00100000 | mode;
 }
 
@@ -83,7 +83,7 @@ void MHI_AC_Ctrl_Core::set_fan(enum ACFan fan) {
   this->fan_new = 0b00001000 | fan;
 }
 
-void MHI_AC_Ctrl_Core::set_3dauto(AC3Dauto vanes_3dauto) {
+void MHI_AC_Ctrl_Core::set_3dauto(enum AC3Dauto vanes_3dauto) {
   vanes_3dauto_new = 0b00001010 | vanes_3dauto;
 }
 
