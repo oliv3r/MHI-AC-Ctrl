@@ -197,59 +197,6 @@ class CallbackInterfaceStatus {
 };
 
 class MHI_AC_Ctrl_Core {
-  private:
-    // old status
-    uint8_t status_power_old;
-    uint8_t status_mode_old;
-    uint8_t status_fan_old;
-    uint8_t status_vanes_horizontal_old;
-    uint8_t status_troom_old;
-    uint8_t status_tsetpoint_old;
-    uint8_t status_errorcode_old;
-
-    uint8_t status_vanes_vertical_old;
-    uint8_t status_3dauto_old;
-
-    // old operating data
-    uint16_t op_kwh;
-    uint8_t op_mode;
-    uint8_t op_indoor_temperature;
-    uint8_t op_indoor_temperature_return_air;
-    uint8_t op_indoor_fanspeed;
-    uint8_t op_indoor_temperature_ubend;
-    uint8_t op_indoor_temperature_capillary;
-    uint8_t op_indoor_temperature_suction_header;
-    uint8_t op_indoor_total_runtime;
-    uint8_t op_outdoor_temperature;
-    uint8_t op_outdoor_temperature_heat_exchanger;
-    uint8_t op_outdoor_total_compressor_runtime;
-    uint8_t op_outdoor_ct_current;
-    uint8_t op_outdoor_temperature_dsh;
-    uint8_t op_outdoor_protection_no;
-    uint8_t op_outdoor_fanspeed;
-    uint8_t op_outdoor_defrost;
-    uint16_t op_outdoor_compressor_frequency;
-    uint8_t op_outdoor_temperature_d;
-    uint16_t op_outdoor_eev1;
-
-    // for writing to AC
-    uint8_t power_new = 0;
-    uint8_t mode_new = 0;
-    uint8_t tsetpoint_new = 0;
-    uint8_t fan_new = 0;
-    uint8_t vanes_horizontal_0_new = 0;
-    uint8_t vanes_horizontal_1_new = 0;
-    bool error_operating_data = false;
-    uint8_t troom_new = ROOM_TEMPERATURE_INTERNAL_SENSOR;  // writing 0xff to DB3 indicates the usage of the internal room temperature sensor
-    float troom_offset = 0.0;
-
-    uint8_t vanes_vertical_0_new = 0;
-    uint8_t vanes_vertical_1_new = 0;
-    uint8_t vanes_3dauto_new = 0;
-    enum mhi_frame_size framesize = MHI_FRAME_SIZE_STANDARD;
-
-    CallbackInterfaceStatus *status_cb;
-
   public:
     void MHI_AC_ctrl_status(CallbackInterfaceStatus *cb) {
       status_cb = cb;
@@ -330,4 +277,57 @@ class MHI_AC_Ctrl_Core {
         this->vanes_vertical_1_new = 0b10000000 | ((vanes - 1) << 4);
       }
     }
+
+  private:
+    // old status
+    uint8_t status_power_old;
+    uint8_t status_mode_old;
+    uint8_t status_fan_old;
+    uint8_t status_vanes_horizontal_old;
+    uint8_t status_troom_old;
+    uint8_t status_tsetpoint_old;
+    uint8_t status_errorcode_old;
+
+    uint8_t status_vanes_vertical_old;
+    uint8_t status_3dauto_old;
+
+    // old operating data
+    uint16_t op_kwh;
+    uint8_t op_mode;
+    uint8_t op_indoor_temperature;
+    uint8_t op_indoor_temperature_return_air;
+    uint8_t op_indoor_fanspeed;
+    uint8_t op_indoor_temperature_ubend;
+    uint8_t op_indoor_temperature_capillary;
+    uint8_t op_indoor_temperature_suction_header;
+    uint8_t op_indoor_total_runtime;
+    uint8_t op_outdoor_temperature;
+    uint8_t op_outdoor_temperature_heat_exchanger;
+    uint8_t op_outdoor_total_compressor_runtime;
+    uint8_t op_outdoor_ct_current;
+    uint8_t op_outdoor_temperature_dsh;
+    uint8_t op_outdoor_protection_no;
+    uint8_t op_outdoor_fanspeed;
+    uint8_t op_outdoor_defrost;
+    uint16_t op_outdoor_compressor_frequency;
+    uint8_t op_outdoor_temperature_d;
+    uint16_t op_outdoor_eev1;
+
+    // for writing to AC
+    uint8_t power_new = 0;
+    uint8_t mode_new = 0;
+    uint8_t tsetpoint_new = 0;
+    uint8_t fan_new = 0;
+    uint8_t vanes_horizontal_0_new = 0;
+    uint8_t vanes_horizontal_1_new = 0;
+    bool error_operating_data = false;
+    uint8_t troom_new = 0xff;  // writing 0xff to DB3 indicates the usage of the internal room temperature sensor
+    float troom_offset = 0.0;
+
+    uint8_t vanes_vertical_0_new = 0;
+    uint8_t vanes_vertical_1_new = 0;
+    uint8_t vanes_3dauto_new = 0;
+    uint8_t framesize = 20;
+
+    CallbackInterfaceStatus *status_cb;
 };
