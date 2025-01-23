@@ -3,23 +3,15 @@
 
 #include <Arduino.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "MHI-AC-Ctrl-core.h"
 
-uint16_t calc_checksum(uint8_t *frame) {
-  uint16_t checksum = 0;
+uint16_t calc_checksum(uint8_t *frame, size_t len) {
+  uint16_t checksum = 0x0000;
 
-  for (int i = 0; i < CBH; i++)
-    checksum += frame[i];
-
-  return checksum;
-}
-
-uint16_t calc_checksumFrame33(uint8_t *frame) {
-  uint16_t checksum = 0;
-
-  for (int i = 0; i < CBL2; i++)
+  for (size_t i = 0; i < len; i++)
     checksum += frame[i];
 
   return checksum;
@@ -221,7 +213,7 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
 
   MISO_frame[DB3] = this->troom_new;  // from MQTT or DS18x20
 
-  uint16_t checksum = calc_checksum(MISO_frame);
+  uint16_t checksum = calc_checksum(MISO_frame, MHI_FRAME_SIZE_STANDARD);
   MISO_frame[CBH] = highByte(checksum);
   MISO_frame[CBL] = lowByte(checksum);
 
@@ -235,7 +227,7 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
     this->new_vanes_vertical_0 = 0;
     this->new_vanes_vertical_1 = 0;
 
-    checksum = calc_checksumFrame33(MISO_frame);
+    checksum = calc_checksum(MISO_frame, MHI_FRAME_SIZE_EXTENDED);
     MISO_frame[CBL2] = lowByte(checksum);
   }
 
@@ -270,7 +262,7 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
     }
   }
 
-  checksum = calc_checksum(MOSI_frame);
+  checksum = calc_checksum(MOSI_frame, MHI_FRAME_SIZE_STANDARD);
   if (((MOSI_frame[SB0] & 0xfe) != 0x6c) | (MOSI_frame[SB1] != 0x80) | (MOSI_frame[SB2] != 0x04))
     return ERR_MSG_INVALID_SIGNATURE;
 
@@ -278,7 +270,7 @@ int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
     return ERR_MSG_INVALID_CHECKSUM;
 
   if (this->framesize == MHI_FRAME_SIZE_EXTENDED) {  // Only for framesize 33 (WF-RAC)
-    checksum = calc_checksumFrame33(MOSI_frame);
+    checksum = calc_checksum(MOSI_frame, MHI_FRAME_SIZE_EXTENDED);
     if (MOSI_frame[CBL2] != lowByte(checksum))
       return ERR_MSG_INVALID_CHECKSUM;
   }
