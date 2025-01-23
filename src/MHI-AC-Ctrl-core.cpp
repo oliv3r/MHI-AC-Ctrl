@@ -128,10 +128,10 @@ void MHI_AC_Ctrl_Core::set_frame_size(uint8_t framesize) {
     this->framesize = framesize;
 }
 
-int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
+int MHI_AC_Ctrl_Core::loop(uint32_t max_time_ms) {
   const uint8_t opdata_cnt = sizeof(opdata) / sizeof(uint8_t) / 2;
   static uint8_t opdata_no = 0;              //
-  long start_ms = millis();           // start time of this loop run
+  uint32_t start_ms = millis();           // start time of this loop run
   uint8_t MOSI_byte;                        // received MOSI byte
   bool new_datapacket_received = false;  // indicated that a new frame was received
   static uint8_t erropdata_cnt = 0;          // number of expected error operating data
@@ -142,13 +142,13 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
   static uint8_t MISO_frame[] = { 0xA9, 0x00, 0x07, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x22 };
 
   static uint call_counter = 0;                     // counts how often this loop was called
-  static unsigned long last_troom_interval_ms = 0; // remember when Troom internal has changed
+  static uint32_t last_troom_interval_ms = 0;  // remember when Troom internal has changed
 
   if (this->framesize == 33)
     MISO_frame[0] = 0xAA;
 
   call_counter++;
-  int clock_ms = millis();           // time of last SCK low level
+  uint32_t clock_ms = millis();        // time of last SCK low level
   while ((millis() - clock_ms) < 5) {  // wait for 5ms stable high signal to detect a frame start
     if (!digitalRead(SCK_PIN))
       clock_ms = millis();
@@ -336,7 +336,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
       }
       else  // internal sensor used
       {
-        if ((unsigned long)(millis() - last_troom_interval_ms) > min_time_interval_troom_ms) {  // Only publish when last change was more then min_time_interval_troom_ms ago
+        if ((millis() - last_troom_interval_ms) > min_time_interval_troom_ms) {  // Only publish when last change was more then min_time_interval_troom_ms ago
           last_troom_interval_ms = millis();
           this->acstatus_troom_old = MOSI_frame[DB3];
           this->status_cb->cbiStatusFunction(ACSTATUS_TROOM, this->acstatus_troom_old);
