@@ -88,7 +88,7 @@ void MHI_AC_Ctrl_Core::set_3dauto(AC3Dauto vanes_3dauto) {
 }
 
 void MHI_AC_Ctrl_Core::set_vanes_vertical(uint vanes) {
-  if (vanes == vanesVertical_swing) {
+  if (vanes == ACVANES_VERTICAL_SWING) {
     this->vanes_vertical_0_new = 0b11000000;  // enable swing
   }
   else {
@@ -98,7 +98,7 @@ void MHI_AC_Ctrl_Core::set_vanes_vertical(uint vanes) {
 }
 
 void MHI_AC_Ctrl_Core::set_vanes_horizontal(uint vanes) {
-  if (vanes == vanesHorizontal_swing) {
+  if (vanes == ACVANES_HORIZONTAL_SWING) {
     this->vanes_horizontal_0_new = 0b00001011;  // enable swing
   }
   else {
@@ -153,7 +153,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
     if (!digitalRead(SCK_PIN))
       clock_ms = millis();
     if ((millis() - start_ms) > max_time_ms)
-      return err_msg_timeout_SCK_low;  // SCK stuck@ low error detection
+      return ERR_MSG_TIMEOUT_CLOCK_LOW;  // SCK stuck@ low error detection
   }
 
   // build the next MISO frame
@@ -248,7 +248,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
 
       while (digitalRead(SCK_PIN)) {  // wait for falling edge
         if (millis() - start_ms > max_time_ms)
-          return err_msg_timeout_SCK_high;  // SCK stuck@ high error detection
+          return ERR_MSG_TIMEOUT_CLOCK_HIGH;  // SCK stuck@ high error detection
       }
       if ((MISO_frame[byte_cnt] & bit_mask) > 0)
         digitalWrite(MISO_PIN, 1);
@@ -271,15 +271,15 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
 
   checksum = calc_checksum(MOSI_frame);
   if (((MOSI_frame[SB0] & 0xfe) != 0x6c) | (MOSI_frame[SB1] != 0x80) | (MOSI_frame[SB2] != 0x04))
-    return err_msg_invalid_signature;
+    return ERR_MSG_INVALID_SIGNATURE;
 
   if (((MOSI_frame[CBH] << 8) | MOSI_frame[CBL]) != checksum)
-    return err_msg_invalid_checksum;
+    return ERR_MSG_INVALID_CHECKSUM;
 
   if (this->framesize == 33) {  // Only for framesize 33 (WF-RAC)
     checksum = calc_checksumFrame33(MOSI_frame);
     if (MOSI_frame[CBL2] != lowByte(checksum))
-      return err_msg_invalid_checksum;
+      return ERR_MSG_INVALID_CHECKSUM;
   }
 
   if (new_datapacket_received) {
@@ -287,71 +287,71 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
       byte vanes_vertical_tmp = (MOSI_frame[DB16] & 0x07) + ((MOSI_frame[DB17] & 0x01) << 4);
       if (vanes_vertical_tmp != this->status_vertical_old) {  // Vanes Left Right
         if ((vanes_vertical_tmp & 0x10) != 0)  // Vanes LR status swing
-          this->status_cb->cbiStatusFunction(status_vanes_vertical, vanesVertical_swing);
+          this->status_cb->cbiStatusFunction(ACSTATUS_VANES_VERTICAL, ACVANES_VERTICAL_SWING);
         else
-          this->status_cb->cbiStatusFunction(status_vanes_vertical, (vanes_vertical_tmp & 0x07) + 1);
+          this->status_cb->cbiStatusFunction(ACSTATUS_VANES_VERTICAL, (vanes_vertical_tmp & 0x07) + 1);
         this->status_vertical_old = vanes_vertical_tmp;
       }
 
-      if ((MOSI_frame[DB17] & 0x04) != this->status_3dauto_old) {  // 3D auto
-        this->status_3dauto_old = MOSI_frame[DB17] & 0x04;
-        this->status_cb->cbiStatusFunction(status_3dauto, this->status_3dauto_old);
+      if ((MOSI_frame[DB17] & 0x04) != this->ACSTATUS_3DAUTO_old) {  // 3D auto
+        this->acstatus_3dauto_old = MOSI_frame[DB17] & 0x04;
+        this->status_cb->cbiStatusFunction(ACSTATUS_3DAUTO, this->acstatus_3dauto_old);
       }
     }
     // evaluate status
-    if ((MOSI_frame[DB0] & 0x1c) != this->status_mode_old) {  // Mode
-      this->status_mode_old = MOSI_frame[DB0] & 0x1c;
-      this->status_cb->cbiStatusFunction(status_mode, this->status_mode_old);
+    if ((MOSI_frame[DB0] & 0x1c) != this->ACSTATUS_MODE_old) {  // Mode
+      this->acstatus_mode_old = MOSI_frame[DB0] & 0x1c;
+      this->status_cb->cbiStatusFunction(ACSTATUS_MODE, this->acstatus_mode_old);
     }
 
-    if ((MOSI_frame[DB0] & 0x01) != this->status_power_old) {  // Power
-      this->status_power_old = MOSI_frame[DB0] & 0x01;
-      this->status_cb->cbiStatusFunction(status_power, this->status_power_old);
+    if ((MOSI_frame[DB0] & 0x01) != this->acstatus_power_old) {  // Power
+      this->acstatus_power_old = MOSI_frame[DB0] & 0x01;
+      this->status_cb->cbiStatusFunction(ACSTATUS_POWER, this->acstatus_power_old);
     }
 
     uint fantmp = MOSI_frame[DB1] & 0x07;
-    if (fantmp != this->status_fan_old) {
-      this->status_fan_old = fantmp;
-      this->status_cb->cbiStatusFunction(status_fan, this->status_fan_old);
+    if (fantmp != this->acstatus_fan_old) {
+      this->acstatus_fan_old = fantmp;
+      this->status_cb->cbiStatusFunction(ACSTATUS_FAN, this->acstatus_fan_old);
     }
 
     // Only updated when Vanes command via wired RC
     uint vanes_horizontal_tmp = (MOSI_frame[DB0] & 0xc0) + ((MOSI_frame[DB1] & 0xB0) >> 4);
-    if (vanes_horizontal_tmp != this->status_vanes_horizontal_old) {
+    if (vanes_horizontal_tmp != this->ACSTATUS_VANES_HORIZONTAL_old) {
       if ((vanes_horizontal_tmp & 0x88) == 0)  // last vanes update was via IR-RC, so status is not known
-        this->status_cb->cbiStatusFunction(status_horizontal_vanes, vanesHorizontal_unknown);
+        this->status_cb->cbiStatusFunction(status_horizontal_vanes, ACVANES_HORIZONTAL_UNKNOWN);
       else if ((vanes_horizontal_tmp & 0x40) != 0)  // Vanes status swing
-        this->status_cb->cbiStatusFunction(status_vanes_horizontal, vanesHorizontal_swing);
+        this->status_cb->cbiStatusFunction(ACSTATUS_VANES_HORIZONTAL, ACVANES_HORIZONTAL_SWING);
       else
-        this->status_cb->cbiStatusFunction(status_vanes_horizontal, (vanes_horizontal_tmp & 0x03) + 1);
-      this->status_vanes_horizontal_old = vanes_horizontal_tmp;
+        this->status_cb->cbiStatusFunction(ACSTATUS_VANES_HORIZONTAL, (vanes_horizontal_tmp & 0x03) + 1);
+      this->acstatus_vanes_horizontal_old = vanes_horizontal_tmp;
     }
 
-    if(MOSI_frame[DB3] != this->status_troom_old) {
+    if(MOSI_frame[DB3] != this->acstatus_troom_old) {
       // To avoid jitter with the fast changing AC internal temperature sensor
       if (MISO_frame[DB3] != 0xff) {  // not internal sensor used, just publish
-        this->status_troom_old = MOSI_frame[DB3];
-        this->status_cb->cbiStatusFunction(status_troom, this->status_troom_old);
+        this->acstatus_troom_old = MOSI_frame[DB3];
+        this->status_cb->cbiStatusFunction(ACSTATUS_TROOM, this->acstatus_troom_old);
         last_troom_interval_ms = 0;
       }
       else  // internal sensor used
       {
         if ((unsigned long)(millis() - last_troom_interval_ms) > min_time_interval_troom_ms) {  // Only publish when last change was more then min_time_interval_troom_ms ago
           last_troom_interval_ms = millis();
-          this->status_troom_old = MOSI_frame[DB3];
-          this->status_cb->cbiStatusFunction(status_troom, this->status_troom_old);
+          this->acstatus_troom_old = MOSI_frame[DB3];
+          this->status_cb->cbiStatusFunction(ACSTATUS_TROOM, this->acstatus_troom_old);
         }
       }
     }
 
-    if (MOSI_frame[DB2] != this->status_tsetpoint_old) {  // Temperature setpoint
-      this->status_tsetpoint_old = MOSI_frame[DB2];
-      this->status_cb->cbiStatusFunction(status_tsetpoint, this->status_tsetpoint_old);
+    if (MOSI_frame[DB2] != this->acstatus_tsetpoint_old) {  // Temperature setpoint
+      this->acstatus_tsetpoint_old = MOSI_frame[DB2];
+      this->status_cb->cbiStatusFunction(ACSTATUS_TSETPOINT, this->acstatus_tsetpoint_old);
     }
 
-    if (MOSI_frame[DB4] != this->status_errorcode_old) {  // error code
-      this->status_errorcode_old = MOSI_frame[DB4];
-      this->status_cb->cbiStatusFunction(status_errorcode, this->status_errorcode_old);
+    if (MOSI_frame[DB4] != this->acstatus_errorcode_old) {  // error code
+      this->acstatus_errorcode_old = MOSI_frame[DB4];
+      this->status_cb->cbiStatusFunction(ACSTATUS_ERRORCODE, this->acstatus_errorcode_old);
     }
 
     // Evaluate Operating Data and Error Operating Data
@@ -363,11 +363,11 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {
             if (((MOSI_frame[DB12] << 8) + (MOSI_frame[DB11])) != this->op_kwh) {
               this->op_kwh = (MOSI_frame[DB12] << 8) + (MOSI_frame[DB11]);
-              this->status_cb->cbiStatusFunction(opdata_kwh, this->op_kwh);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_kWh, this->op_kwh);
             }
           }
           //else
-          //  this->status_cb->cbiStatusFunction(erropdata_unknown, op_unknown);  // noch nie gesehen, dass es auftaucht
+          //  this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_UNKNOWN, op_unknown);  // noch nie gesehen, dass es auftaucht
         }
         break;
       case 0x02:
@@ -375,12 +375,12 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {
             if ((MOSI_frame[DB10] != this->op_mode)) {
               this->op_mode = MOSI_frame[DB10];
-              this->status_cb->cbiStatusFunction(opdata_mode, (this->op_mode & 0x0f) << 2);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_MODE, (this->op_mode & 0x0f) << 2);
             }
           }
           else
           {
-            this->status_cb->cbiStatusFunction(erropdata_mode, (MOSI_frame[DB10] & 0x0f) << 2);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_MODE, (MOSI_frame[DB10] & 0x0f) << 2);
           }
         }
         break;
@@ -389,11 +389,11 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_frame[DB10] == 0x13) {
             if (MOSI_frame[DB11] != this->op_indoor_temperature) {
               this->op_indoor_temperature = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_tsetpoint, this->op_indoor_temperature);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_INDOOR_TEMPERATURE, this->op_indoor_temperature);
             }
           }
           else if (MOSI_frame[DB10] == 0x33) {
-            this->status_cb->cbiStatusFunction(erropdata_tsetpoint, MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_INDOOR_TEMPERATURE, MOSI_frame[DB11]);
           }
         }
         break;
@@ -402,19 +402,19 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if ((MOSI_frame[DB10] & 0x30) == 0x20) {
             if (MOSI_frame[DB11] != this->op_indoor_temperature_ubend) {
               this->op_indoor_temperature_ubend = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_thi_r1, this->op_indoor_temperature_ubend);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_INDOOR_TEMPERATURE_UBEND, this->op_indoor_temperature_ubend);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_thi_r1, MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_INDOOR_TEMPERATURE_UBEND, MOSI_frame[DB11]);
           }
         } else {                              // 6 THI-R2
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != this->op_indoor_temperature_capillary) {
               this->op_indoor_temperature_capillary = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_thi_r2, this->op_indoor_temperature_capillary);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_INDOOR_TEMPERATURE_CAPILLARY, this->op_indoor_temperature_capillary);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_thi_r2, MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_INDOOR_TEMPERATURE_CAPILLARY, MOSI_frame[DB11]);
           }
         }
         break;
@@ -423,10 +423,10 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != this->op_indoor_temperature_suction_header) {
               this->op_indoor_temperature_suction_header = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_thi_r3, this->op_indoor_temperature_suction_header);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_INDOOR_TEMPERATURE_SUCTION_HEADER, this->op_indoor_temperature_suction_header);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_thi_r3, MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_INDOOR_TEMPERATURE_SUCTION_HEADER, MOSI_frame[DB11]);
           }
         }
         break;
@@ -435,19 +435,19 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if ((MOSI_frame[DB10] & 0x30) == 0x20) {  // operating Data
             if (MOSI_frame[DB11] != this->op_indoor_temperature_return_air) {
               this->op_indoor_temperature_return_air = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_return_air, this->op_indoor_temperature_return_air);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_INDOOR_TEMPERATURE_RETURN_AIR, this->op_indoor_temperature_return_air);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_return_air, MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_INDOOR_TEMPERATURE_RETURN_AIR, MOSI_frame[DB11]);
           }
         } else {                              // 21 OUTDOOR
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != this->op_outdoor_temperature) {
               this->op_outdoor_temperature = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_outdoor, this->op_outdoor_temperature);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_OUTDOOR_TEMPERATURE, this->op_outdoor_temperature);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_outdoor, MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_OUTDOOR_TEMPERATURE, MOSI_frame[DB11]);
           }
         }
         break;
@@ -456,19 +456,19 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB10] != this->op_indoor_fanspeed) {
               this->op_indoor_fanspeed = MOSI_frame[DB10];
-              this->status_cb->cbiStatusFunction(opdata_iu_fanspeed, this->op_indoor_fanspeed & 0x0f);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_INDOOR_FANSPEED, this->op_indoor_fanspeed & 0x0f);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_iu_fanspeed, MOSI_frame[DB10] & 0x0f);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_INDOOR_FANSPEED, MOSI_frame[DB10] & 0x0f);
           }
         } else {                              // 34 OU-FANSPEED
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB10] != this->op_outdoor_fanspeed) {
               this->op_outdoor_fanspeed = MOSI_frame[DB10];
-              this->status_cb->cbiStatusFunction(opdata_ou_fanspeed, this->op_outdoor_fanspeed & 0x0f);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_OUTDOOR_FANSPEED, this->op_outdoor_fanspeed & 0x0f);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_ou_fanspeed, MOSI_frame[DB10] & 0x0f);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_OUTDOOR_FANSPEED, MOSI_frame[DB10] & 0x0f);
           }
         }
         break;
@@ -477,19 +477,19 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != this->op_indoor_total_runtime) {
               this->op_indoor_total_runtime = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_iu_run, this->op_indoor_total_runtime);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_INDOOR_TOTAL_RUNTIME, this->op_indoor_total_runtime);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_total_iu_run, MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_INDOOR_TOTAL_RUNTIME, MOSI_frame[DB11]);
           }
         } else {                              // 37 TOTAL-COMP-RUN
           if (MOSI_frame[DB10] == 0x11) {
             if (MOSI_frame[DB11] != this->op_outdoor_total_compressor_runtime) {
               this->op_outdoor_total_compressor_runtime = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_compressor, this->op_outdoor_total_compressor_runtime);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_TOTAL_COMPRESSOR_RUNTIME, this->op_outdoor_total_compressor_runtime);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_total_comp_run, MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_TOTAL_COMPRESSOR_RUNTIME, MOSI_frame[DB11]);
           }
         }
         break;
@@ -498,10 +498,10 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {  // operating data
             if (MOSI_frame[DB11] != this->op_outdoor_temperature_heat_exchanger) {
               this->op_outdoor_temperature_heat_exchanger = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_tho_r1, this->op_outdoor_temperature_heat_exchanger);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_OUTDOOR_TEMPERATURE_HEAT_EXCHANGER, this->op_outdoor_temperature_heat_exchanger);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_tho_r1, MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_OUTDOOR_TEMPERATURE_HEAT_EXCHANGER, MOSI_frame[DB11]);
           }
         }
         break;
@@ -510,10 +510,10 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {
             if (((MOSI_frame[DB10] << 8) | MOSI_frame[DB11]) != this->op_outdoor_compressor_frequency) {
               this->op_outdoor_compressor_frequency = (MOSI_frame[DB10] << 8) | MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_compressor, this->op_outdoor_compressor_frequency);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_COMPRESSOR_FREQUENCY, this->op_outdoor_compressor_frequency);
             }
           } else {
-            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_COMPRESSOR, ((MOSI_frame[DB10] << 8) | MOSI_frame[DB11]));
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_COMPRESSOR_FREQUENCY, ((MOSI_frame[DB10] << 8) | MOSI_frame[DB11]));
           }
         }
         break;
@@ -522,10 +522,10 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != this->op_outdoor_temperature_d) {
               this->op_outdoor_temperature_d = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_td, this->op_outdoor_temperature_d);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_OUTDOOR_TEMPERATURE_D, this->op_outdoor_temperature_d);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_td, MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_OUTDOOR_TEMPERATURE_D, MOSI_frame[DB11]);
           }
         }
         break;
@@ -534,10 +534,10 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != this->op_outdoor_ct_current) {
               this->op_outdoor_ct_current = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_ct, this->op_outdoor_ct_current);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_CT_CURRENT, this->op_outdoor_ct_current);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_ct, MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_CT_CURRENT, MOSI_frame[DB11]);
           }
         }
         break;
@@ -546,7 +546,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != this->op_outdoor_temperature_dsh) {
               this->op_outdoor_temperature_dsh = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_tdsh, this->op_outdoor_temperature_dsh / 2);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_OUTDOOR_TEMPERATURE_DSH, this->op_outdoor_temperature_dsh / 2);
             }
           }
         }
@@ -556,7 +556,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB11] != this->op_outdoor_protection_no) {
               this->op_outdoor_protection_no = MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_protection_no, this->op_outdoor_protection_no);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_PROTECTION_NO, this->op_outdoor_protection_no);
             }
           }
         }
@@ -566,7 +566,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {
             if (MOSI_frame[DB10] != this->op_outdoor_defrost) {
               this->op_outdoor_defrost = MOSI_frame[DB10];
-              this->status_cb->cbiStatusFunction(opdata_defrost, this->op_outdoor_defrost & 0b1);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_DEFROST, this->op_outdoor_defrost & 0b1);
             }
           }
         }
@@ -576,17 +576,17 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
           if (MOSI_type_opdata) {
             if (((MOSI_frame[DB12] << 8) | MOSI_frame[DB11]) != this->op_outdoor_eev1) {
               this->op_outdoor_eev1 = (MOSI_frame[DB12] << 8) | MOSI_frame[DB11];
-              this->status_cb->cbiStatusFunction(opdata_ou_eev1, this->op_outdoor_eev1);
+              this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_OUTDOOR_EEV1, this->op_outdoor_eev1);
             }
           } else {
-            this->status_cb->cbiStatusFunction(erropdata_ou_eev1, (MOSI_frame[DB12] << 8) | MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_OUTDOOR_EEV1, (MOSI_frame[DB12] << 8) | MOSI_frame[DB11]);
           }
         }
         break;
       case 0x45:  // last error number or count of following error operating data
         if ((MOSI_frame[DB6] & 0x80) != 0) {
           if (MOSI_frame[DB10] == 0x11) {  // last error number
-            this->status_cb->cbiStatusFunction(erropdata_errorcode, MOSI_frame[DB11]);
+            this->status_cb->cbiStatusFunction(ACSTATUS_ERR_OPDATA_ERRORCODE, MOSI_frame[DB11]);
           } else if (MOSI_frame[DB10] == 0x12) { // count of following error operating data
             erropdata_cnt = MOSI_frame[DB11] + 4;
           }
@@ -597,7 +597,7 @@ int MHI_AC_Ctrl_Core::loop(uint max_time_ms) {
       case 0xff:  // default
         break;
       default:    // unknown operating data
-        this->status_cb->cbiStatusFunction(opdata_unknown, (MOSI_frame[DB10] << 8) | MOSI_frame[DB9]);
+        this->status_cb->cbiStatusFunction(ACSTATUS_OPDATA_UNKNOWN, (MOSI_frame[DB10] << 8) | MOSI_frame[DB9]);
         Serial.printf("Unknown operating data, MOSI_frame[DB9]=%i MOSI_frame[D10]=%i\n", MOSI_frame[DB9], MOSI_frame[DB10]);
     }
   }

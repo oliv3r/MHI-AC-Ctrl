@@ -20,11 +20,11 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
 #ifndef POWERON_WHEN_CHANGING_MODE
   if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_POWER)) == 0) {
     if (strcmp_P((char*)payload, PSTR(PAYLOAD_POWER_ON)) == 0) {
-      mhi_ac_ctrl_core.set_power(power_on);
+      mhi_ac_ctrl_core.set_power(ACPOWER_ON);
       publish_cmd_ok();
     }
     else if (strcmp_P((char*)payload, PSTR(PAYLOAD_POWER_OFF)) == 0) {
-      mhi_ac_ctrl_core.set_power(power_off);
+      mhi_ac_ctrl_core.set_power(ACPOWER_OFF);
       publish_cmd_ok();
     }
     else
@@ -35,42 +35,42 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
   if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_MODE)) == 0) {
 #ifdef POWERON_WHEN_CHANGING_MODE
     if (strcmp_P((char*)payload, PSTR(PAYLOAD_POWER_OFF)) == 0) {
-      mhi_ac_ctrl_core.set_power(power_off);
+      mhi_ac_ctrl_core.set_power(ACPOWER_OFF);
       publish_cmd_ok();
     } else
 #endif
       if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_AUTO)) == 0) {
-        mhi_ac_ctrl_core.set_mode(mode_auto);
+        mhi_ac_ctrl_core.set_mode(ACMODE_AUTO);
 #ifdef POWERON_WHEN_CHANGING_MODE
-        mhi_ac_ctrl_core.set_power(power_on);
+        mhi_ac_ctrl_core.set_power(ACPOWER_ON);
 #endif
         publish_cmd_ok();
       }
       else if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_DRY)) == 0) {
-        mhi_ac_ctrl_core.set_mode(mode_dry);
+        mhi_ac_ctrl_core.set_mode(ACMODE_DRY);
 #ifdef POWERON_WHEN_CHANGING_MODE
-        mhi_ac_ctrl_core.set_power(power_on);
+        mhi_ac_ctrl_core.set_power(ACPOWER_ON);
 #endif
         publish_cmd_ok();
       }
       else if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_COOL)) == 0) {
-        mhi_ac_ctrl_core.set_mode(mode_cool);
+        mhi_ac_ctrl_core.set_mode(ACMODE_COOL);
 #ifdef POWERON_WHEN_CHANGING_MODE
-        mhi_ac_ctrl_core.set_power(power_on);
+        mhi_ac_ctrl_core.set_power(ACPOWER_ON);
 #endif
         publish_cmd_ok();
       }
       else if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_FAN)) == 0) {
-        mhi_ac_ctrl_core.set_mode(mode_fan);
+        mhi_ac_ctrl_core.set_mode(ACMODE_FAN);
 #ifdef POWERON_WHEN_CHANGING_MODE
-        mhi_ac_ctrl_core.set_power(power_on);
+        mhi_ac_ctrl_core.set_power(ACPOWER_ON);
 #endif
         publish_cmd_ok();
       }
       else if (strcmp_P((char*)payload, PSTR(PAYLOAD_MODE_HEAT)) == 0) {
-        mhi_ac_ctrl_core.set_mode(mode_heat);
+        mhi_ac_ctrl_core.set_mode(ACMODE_HEAT);
 #ifdef POWERON_WHEN_CHANGING_MODE
-        mhi_ac_ctrl_core.set_power(power_on);
+        mhi_ac_ctrl_core.set_power(ACPOWER_ON);
 #endif
         publish_cmd_ok();
       }
@@ -114,7 +114,7 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
       publish_cmd_ok();
     }
     else {
-      if ((atoi((char*)payload) >= 1) & (atoi((char*)payload) <= 5)) {
+      if ((atoi((char*)payload) >= ACVANES_HORIZONTAL_1) & (atoi((char*)payload) <= ACVANES_HORIZONTAL_SWING)) {
         mhi_ac_ctrl_core.set_vanes_horizontal(atoi((char*)payload));
         publish_cmd_ok();
       }
@@ -129,7 +129,7 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
       publish_cmd_ok();
     }
     else {
-      if ((atoi((char*)payload) >= 1) & (atoi((char*)payload) <= 7)) {
+      if ((atoi((char*)payload) >= ACVANES_VERTICAL_1) & (atoi((char*)payload) <= ACVANES_VERTICAL_7)) {
         mhi_ac_ctrl_core.set_vanes_vertical(atoi((char*)payload));
         publish_cmd_ok();
       }
@@ -194,29 +194,29 @@ class StatusHandler : public CallbackInterfaceStatus {
       float offset = mhi_ac_ctrl_core.get_troom_offset();
       float tmp_value;
 #endif
-      static byte status_troom_old=0xff;
+      static byte ACSTATUS_TROOM_old=0xff;
       //Serial.printf_P(PSTR("status=%i value=%i\n"), status, value);
       switch (status) {
-        case status_power:
+        case ACSTATUS_POWER:
           // After powerdown AC (230V), fan status is only showing 1, 2 or 3. 4 and Auto is not shown when changing with RC.
           // Only when setting fan to Auto one time after powerdown AC, it will show 4 and Auto.
           // Below will take care of this.
           if (power_status == unknown) {  // First time after startup esp
-            Serial.printf("power_status: unknown; received status_power: %i\n", value);
-            if (value == power_off) {  // Only when status is power off, set fan to Auto. 
+            Serial.printf("power_status: unknown; received ACSTATUS_POWER: %i\n", value);
+            if (value == ACPOWER_OFF) {  // Only when status is power off, set fan to Auto. 
               Serial.println("Set fan to Auto to fix fan status after powerdown (230V) AC");
               mhi_ac_ctrl_core. set_fan(7);
             }
           } else if (power_status == off) 
-            Serial.printf("power_status: off; received status_power: %i\n", value);
+            Serial.printf("power_status: off; received ACSTATUS_POWER: %i\n", value);
           else if (power_status == on) 
-            Serial.printf("power_status: on; received status_power: %i\n", value);
+            Serial.printf("power_status: on; received ACSTATUS_POWER: %i\n", value);
 
-          if (value == power_on){
+          if (value == ACPOWER_ON){
             output_P(status, (TOPIC_POWER), PSTR(PAYLOAD_POWER_ON));
             power_status = on;
 #ifdef POWERON_WHEN_CHANGING_MODE
-            cbiStatusFunction(status_mode, mode_tmp);
+            cbiStatusFunction(ACSTATUS_MODE, mode_tmp);
 #endif
           }
           else {
@@ -227,42 +227,42 @@ class StatusHandler : public CallbackInterfaceStatus {
 #endif
           }
           break;
-        case status_mode:
+        case ACSTATUS_MODE:
 #ifdef POWERON_WHEN_CHANGING_MODE        
           mode_tmp = value;
 #endif          
-        case opdata_mode:
-        case erropdata_mode:
+        case ACSTATUS_OPDATA_MODE:
+        case ACSTATUS_ERR_OPDATA_MODE:
           switch (value) {
-            case mode_auto:
-              if (status != erropdata_mode)
+            case ACMODE_AUTO:
+              if (status != ACSTATUS_ERR_OPDATA_MODE)
                 output_P(status, PSTR(TOPIC_MODE), PSTR(PAYLOAD_MODE_AUTO));
               else
                 output_P(status, PSTR(TOPIC_MODE), PSTR(PAYLOAD_MODE_STOP));
               break;
-            case mode_dry:
+            case ACMODE_DRY:
               output_P(status, PSTR(TOPIC_MODE), PSTR(PAYLOAD_MODE_DRY));
               break;
-            case mode_cool:
+            case ACMODE_COOL:
               output_P(status, PSTR(TOPIC_MODE), PSTR(PAYLOAD_MODE_COOL));
               break;
-            case mode_fan:
+            case ACMODE_FAN:
               output_P(status, PSTR(TOPIC_MODE), PSTR(PAYLOAD_MODE_FAN));
               break;
-            case mode_heat:
+            case ACMODE_HEAT:
               output_P(status, PSTR(TOPIC_MODE), PSTR(PAYLOAD_MODE_HEAT));
               break;
           }
           break;
-        case opdata_kwh:
+        case ACSTATUS_OPDATA_kWh:
           dtostrf(highByte(value)*64.0f + lowByte(value)*0.25f, 0, 2, strtmp);
           output_P(status, PSTR(TOPIC_KWH), strtmp);
           break;
-        case opdata_unknown:
+        case ACSTATUS_OPDATA_UNKNOWN:
           itoa(value, strtmp, 10);
           output_P(status, PSTR(TOPIC_UNKNOWN), strtmp);
           break;
-        case status_fan:
+        case ACSTATUS_FAN:
           switch (value) {
             case 0:
               output_P(status, TOPIC_FAN, "1");
@@ -286,12 +286,12 @@ class StatusHandler : public CallbackInterfaceStatus {
               break;              
           }
           break;
-        case status_vanes_horizontal:
+        case ACSTATUS_VANES_HORIZONTAL:
           switch (value) {
-            case vanesHorizontal_unknown:
+            case ACVANES_HORIZONTAL_UNKNOWN:
               output_P(status, PSTR(TOPIC_VANES), PSTR(PAYLOAD_VANES_UNKNOWN));
               break;
-            case vanesHorizontal_swing:
+            case ACVANES_HORIZONTAL_SWING:
               output_P(status, PSTR(TOPIC_VANES), PSTR(PAYLOAD_VANES_SWING));
               break;
             default:
@@ -300,9 +300,9 @@ class StatusHandler : public CallbackInterfaceStatus {
           }
           break;
 #ifdef USE_EXTENDED_FRAME_SIZE            
-        case status_vanes_vertical:
+        case ACSTATUS_VANES_VERTICAL:
           switch (value) {
-            case vanesVertical_swing:
+            case ACVANES_VERTICAL_SWING:
               output_P(status, PSTR(TOPIC_VANESLR), PSTR(PAYLOAD_VANESLR_SWING));
               break;
             default:
@@ -310,128 +310,128 @@ class StatusHandler : public CallbackInterfaceStatus {
               output_P(status, PSTR(TOPIC_VANESLR), strtmp);
           }
           break;
-        case status_3dauto:
+        case ACSTATUS_3DAUTO:
           switch (value) {
-            case vanes_3dauto_on:
+            case ACVANES_3DAUTO_ON:
               output_P(status, PSTR(TOPIC_3DAUTO), PSTR(PAYLOAD_3DAUTO_ON));
               break;
-            case vanes_3dauto_off:
+            case ACVANES_3DAUTO_OFF:
               output_P(status, PSTR(TOPIC_3DAUTO), PSTR(PAYLOAD_3DAUTO_OFF));
               break;
           }
           break;
 #endif
-        case status_troom:
+        case ACSTATUS_TROOM:
           {
-            int8_t troom_diff = value - status_troom_old; // avoid using other functions inside the brackets of abs, see https://www.arduino.cc/reference/en/language/functions/math/abs/
+            int8_t troom_diff = value - ACSTATUS_TROOM_old; // avoid using other functions inside the brackets of abs, see https://www.arduino.cc/reference/en/language/functions/math/abs/
             if (abs(troom_diff) > TROOM_FILTER_LIMIT/0.25f) { // Room temperature delta > 0.25°C
-              status_troom_old = value;
+              ACSTATUS_TROOM_old = value;
               dtostrf((value - 61) / 4.0, 0, 2, strtmp);
               output_P(status, PSTR(TOPIC_TROOM), strtmp);
             }
           }
           break;
-        case status_tsetpoint:
+        case ACSTATUS_TSETPOINT:
 #ifdef ENHANCED_RESOLUTION
           tmp_value = (value & 0x7f)/ 2.0;
           offset = round(tmp_value) - tmp_value;  // Calculate offset when setpoint is changed
-          Serial.printf("status_tsetpoint: Set Troom offset: %f\n", offset);
+          Serial.printf("ACSTATUS_TSETPOINT: Set Troom offset: %f\n", offset);
           mhi_ac_ctrl_core.set_troom_offset(offset);
 #endif          
-        case opdata_tsetpoint:
-        case erropdata_tsetpoint:
+        case ACSTATUS_OPDATA_INDOOR_TEMPERATURE:
+        case ACSTATUS_ERR_OPDATA_INDOOR_TEMPERATURE:
           dtostrf((value & 0x7f)/ 2.0, 0, 1, strtmp);
           output_P(status, PSTR(TOPIC_TSETPOINT), strtmp);
           break;
-        case status_errorcode:
-        case erropdata_errorcode:
+        case ACSTATUS_ERRORCODE:
+        case ACSTATUS_ERR_OPDATA_ERRORCODE:
           itoa(value, strtmp, 10);
           output_P(status, PSTR(TOPIC_ERRORCODE), strtmp);
           break;
-        case opdata_return_air:
-        case erropdata_return_air:
+        case ACSTATUS_OPDATA_INDOOR_TEMPERATURE_RETURN_AIR:
+        case ACSTATUS_ERR_OPDATA_INDOOR_TEMPERATURE_RETURN_AIR:
           dtostrf((value - 61) / 4.0, 0, 2, strtmp);
           output_P(status, PSTR(TOPIC_RETURNAIR), strtmp);
           break;
-        case opdata_thi_r1:
-        case erropdata_thi_r1:
+        case ACSTATUS_OPDATA_INDOOR_TEMPERATURE_UBEND:
+        case ACSTATUS_ERR_OPDATA_INDOOR_TEMPERATURE_UBEND:
           itoa(0.327f * value - 11.4f, strtmp, 10); // only rough approximation
           output_P(status, PSTR(TOPIC_THI_R1), strtmp);
           break;
-        case opdata_thi_r2:
-        case erropdata_thi_r2:
+        case ACSTATUS_OPDATA_INDOOR_TEMPERATURE_CAPILLARY:
+        case ACSTATUS_ERR_OPDATA_INDOOR_TEMPERATURE_CAPILLARY:
           itoa(0.327f * value - 11.4f, strtmp, 10); // formula for calculation not known
           output_P(status, PSTR(TOPIC_THI_R2), strtmp);
           break;
-        case opdata_thi_r3:
-        case erropdata_thi_r3:
+        case ACSTATUS_OPDATA_INDOOR_TEMPERATURE_SUCTION_HEADER:
+        case ACSTATUS_ERR_OPDATA_INDOOR_TEMPERATURE_SUCTION_HEADER:
           itoa(0.327f * value - 11.4f, strtmp, 10); // only rough approximation
           output_P(status, PSTR(TOPIC_THI_R3), strtmp);
           break;
-        case opdata_iu_fanspeed:
-        case erropdata_iu_fanspeed:
+        case ACSTATUS_OPDATA_INDOOR_FANSPEED:
+        case ACSTATUS_ERR_OPDATA_INDOOR_FANSPEED:
           itoa(value, strtmp, 10);
           output_P(status, PSTR(TOPIC_IU_FANSPEED), strtmp);
           break;
-        case opdata_total_iu_run:
-        case erropdata_total_iu_run:
+        case ACSTATUS_OPDATA_INDOOR_TOTAL_RUNTIME:
+        case ACSTATUS_ERR_OPDATA_INDOOR_TOTAL_RUNTIME:
           itoa(value * 100, strtmp, 10);
           output_P(status, PSTR(TOPIC_TOTAL_IU_RUN), strtmp);
           break;
-        case erropdata_outdoor:
-        case opdata_outdoor:
+        case ACSTATUS_ERR_OPDATA_OUTDOOR_TEMPERATURE:
+        case ACSTATUS_OPDATA_OUTDOOR_TEMPERATURE:
           dtostrf((value - 94) * 0.25f, 0, 2, strtmp);
           output_P(status, PSTR(TOPIC_OUTDOOR), strtmp);
           break;
-        case opdata_tho_r1:
-        case erropdata_tho_r1:
+        case ACSTATUS_OPDATA_OUTDOOR_TEMPERATURE_HEAT_EXCHANGER:
+        case ACSTATUS_ERR_OPDATA_OUTDOOR_TEMPERATURE_HEAT_EXCHANGER:
           itoa(0.327f * value - 11.4f, strtmp, 10); // formula for calculation not known
           output_P(status, PSTR(TOPIC_THO_R1), strtmp);
           break;
-        case opdata_comp:
-        case erropdata_comp:
+        case ACSTATUS_OPDATA_COMPRESSOR_FREQUENCY:
+        case ACSTATUS_ERR_OPDATA_COMPRESSOR_FREQUENCY:
           dtostrf(highByte(value) * 25.6f + 0.1f * lowByte(value), 0, 2, strtmp);  // to be confirmed
           output_P(status, PSTR(TOPIC_COMP), strtmp);
           break;
-        case erropdata_td:
-        case opdata_td:
+        case ACSTATUS_ERR_OPDATA_OUTDOOR_TEMPERATURE_D:
+        case ACSTATUS_OPDATA_OUTDOOR_TEMPERATURE_D:
           if (value < 0x12)
             strcpy(strtmp, "<=30");
           else
             itoa(value / 2 + 32, strtmp, 10);
           output_P(status, PSTR(TOPIC_TD), strtmp);
           break;
-        case opdata_ct:
-        case erropdata_ct:
+        case ACSTATUS_OPDATA_CT_CURRENT:
+        case ACSTATUS_ERR_OPDATA_CT_CURRENT:
           dtostrf(value * 14 / 51.0f, 0, 2, strtmp);
           output_P(status, PSTR(TOPIC_CT), strtmp);
           break;
-        case opdata_tdsh:
+        case ACSTATUS_OPDATA_OUTDOOR_TEMPERATURE_DSH:
           itoa(value, strtmp, 10); // formula for calculation not known
           output_P(status, PSTR(TOPIC_TDSH), strtmp);
           break;
-        case opdata_protection_no:
+        case ACSTATUS_OPDATA_PROTECTION_NO:
           itoa(value, strtmp, 10);
           output_P(status, PSTR(TOPIC_PROTECTION_NO), strtmp);
           break;
-        case opdata_ou_fanspeed:
-        case erropdata_ou_fanspeed:
+        case ACSTATUS_OPDATA_OUTDOOR_FANSPEED:
+        case ACSTATUS_ERR_OPDATA_OUTDOOR_FANSPEED:
           itoa(value, strtmp, 10);
           output_P(status, PSTR(TOPIC_OU_FANSPEED), strtmp);
           break;
-        case opdata_defrost:
+        case ACSTATUS_OPDATA_DEFROST:
           if (value)
             output_P(status, PSTR(TOPIC_DEFROST), PSTR(PAYLOAD_OP_DEFROST_ON));
           else
             output_P(status, PSTR(TOPIC_DEFROST), PSTR(PAYLOAD_OP_DEFROST_OFF));
           break;
-        case opdata_total_comp_run:
-        case erropdata_total_comp_run:
+        case ACSTATUS_OPDATA_TOTAL_COMPRESSOR_RUNTIME:
+        case ACSTATUS_ERR_OPDATA_TOTAL_COMPRESSOR_RUNTIME:
           itoa(value * 100, strtmp, 10);
           output_P(status, PSTR(TOPIC_TOTAL_COMP_RUN), strtmp);
           break;
-        case opdata_ou_eev1:
-        case erropdata_ou_eev1:
+        case ACSTATUS_OPDATA_OUTDOOR_EEV1:
+        case ACSTATUS_ERR_OPDATA_OUTDOOR_EEV1:
           itoa(value, strtmp, 10);
           output_P(status, PSTR(TOPIC_OU_EEV1), strtmp);
           break;

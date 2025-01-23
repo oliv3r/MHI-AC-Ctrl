@@ -154,16 +154,16 @@ int MQTTreconnect() {
       Serial.println(F(" connected"));
       Serial.printf("MQTTclient.connected=%i\n", MQTTclient.connected());
       reconnect_trials=0;
-      output_P((ACStatus)type_status, PSTR(TOPIC_CONNECTED), PSTR(PAYLOAD_CONNECTED_TRUE));
-      output_P((ACStatus)type_status, PSTR(TOPIC_VERSION), PSTR(VERSION));
+      output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_CONNECTED), PSTR(PAYLOAD_CONNECTED_TRUE));
+      output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_VERSION), PSTR(VERSION));
       itoa(WiFi.RSSI(), strtmp, 10);
-      output_P((ACStatus)type_status, PSTR(TOPIC_RSSI), strtmp);
+      output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_RSSI), strtmp);
       itoa(WIFI_lost, strtmp, 10);
-      output_P((ACStatus)type_status, PSTR(TOPIC_WIFI_LOST), strtmp);
+      output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_WIFI_LOST), strtmp);
       itoa(MQTT_lost, strtmp, 10);
-      output_P((ACStatus)type_status, PSTR(TOPIC_MQTT_LOST), strtmp);
+      output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_MQTT_LOST), strtmp);
       WiFi.BSSIDstr().toCharArray(strtmp, 20);
-      output_P((ACStatus)type_status, PSTR(TOPIC_WIFI_BSSID), strtmp);
+      output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_WIFI_BSSID), strtmp);
 
       // for testing publish list of access points with the expected SSID 
       Serial.printf("MQTTreconnect(): %i access points available\n", networksFound);         
@@ -181,11 +181,11 @@ int MQTTreconnect() {
       }
 
       itoa(rising_edge_cnt.SCK, strtmp, 10);
-      output_P((ACStatus)type_status, PSTR(TOPIC_FSCK), strtmp);
+      output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_FSCK), strtmp);
       itoa(rising_edge_cnt.MOSI, strtmp, 10);
-      output_P((ACStatus)type_status, PSTR(TOPIC_FMOSI), strtmp);
+      output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_FMOSI), strtmp);
       itoa(rising_edge_cnt.MISO, strtmp, 10);
-      output_P((ACStatus)type_status, PSTR(TOPIC_FMISO), strtmp);
+      output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_FMISO), strtmp);
       
       MQTTclient.subscribe(MQTT_SET_PREFIX "#");
       return MQTT_RECONNECTED;
@@ -204,13 +204,13 @@ int MQTTreconnect() {
 }
 
 void publish_cmd_ok() {
-  output_P((ACStatus)type_status, PSTR(TOPIC_CMD_RECEIVED), PSTR(PAYLOAD_CMD_OK));
+  output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_CMD_RECEIVED), PSTR(PAYLOAD_CMD_OK));
 }
 void publish_cmd_unknown() {
-  output_P((ACStatus)type_status, PSTR(TOPIC_CMD_RECEIVED), PSTR(PAYLOAD_CMD_UNKNOWN));
+  output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_CMD_RECEIVED), PSTR(PAYLOAD_CMD_UNKNOWN));
 }
 void publish_cmd_invalidparameter() {
-  output_P((ACStatus)type_status, PSTR(TOPIC_CMD_RECEIVED), PSTR(PAYLOAD_CMD_INVALID_PARAMETER));
+  output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_CMD_RECEIVED), PSTR(PAYLOAD_CMD_INVALID_PARAMETER));
 }
 
 void output_P(const ACStatus status, PGM_P topic, PGM_P payload) {
@@ -219,11 +219,11 @@ void output_P(const ACStatus status, PGM_P topic, PGM_P payload) {
   
   Serial.printf_P(PSTR("status=%i topic=%s payload=%s\n"), status, topic, payload);
   
-  if ((status & 0xc0) == type_status)
+  if ((status & 0xc0) == ACTYPE_STATUS)
     strncpy_P(mqtt_topic, PSTR(MQTT_PREFIX), mqtt_topic_size);
-  else if ((status & 0xc0) == type_opdata)
+  else if ((status & 0xc0) == ACTYPE_OPDATA)
     strncpy_P(mqtt_topic, PSTR(MQTT_OP_PREFIX), mqtt_topic_size);
-  else if ((status & 0xc0) == type_erropdata)
+  else if ((status & 0xc0) == ACTYPE_ERROPDATA)
     strncpy_P(mqtt_topic, PSTR(MQTT_ERR_OP_PREFIX), mqtt_topic_size);
   strncat_P(mqtt_topic, topic, mqtt_topic_size - strlen(mqtt_topic));
   MQTTclient.publish_P(mqtt_topic, payload, true);
@@ -254,7 +254,7 @@ byte getDs18x20Temperature(int temp_hysterese) {
       char strtmp[10];
       dtostrf(sensors.rawToCelsius(tempR), 0, 2, strtmp);
       //Serial.printf_P(PSTR("new DS18x20 temperature=%s°C\n"), strtmp);
-      output_P((ACStatus)type_status, PSTR(TOPIC_TDS1820), strtmp);
+      output_P((ACStatus)ACTYPE_STATUS, PSTR(TOPIC_TDS1820), strtmp);
     }
     DS1820Millis = millis();
     sensors.requestTemperatures();
