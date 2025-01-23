@@ -176,7 +176,7 @@ enum AC3Dauto {  // 3D auto enum
   vanes_3dauto_on  = 0b00000100,
 };
 
-class CallbackInterface_Status {
+class CallbackInterfaceStatus {
   public:
     virtual void status_cb(ACStatus status, int value) = 0;
 };
@@ -233,10 +233,10 @@ class MHI_AC_Ctrl_Core {
     byte vanes_3dauto_new = 0;
     byte framesize = 20;
 
-    CallbackInterface_Status *status_cb;
+    CallbackInterfaceStatus *status_cb;
 
   public:
-    void MHI_AC_ctrl_status(CallbackInterface_Status *cb) {
+    void MHI_AC_ctrl_status(CallbackInterfaceStatus *cb) {
       status_cb = cb;
     };
 

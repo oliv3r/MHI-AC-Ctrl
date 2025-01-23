@@ -183,7 +183,7 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
     publish_cmd_unknown();
 }
 
-class StatusHandler : public CallbackInterface_Status {
+class StatusHandler : public CallbackInterfaceStatus {
   public:
     void cbiStatusFunction(ACStatus status, int value) {
       char strtmp[10];
