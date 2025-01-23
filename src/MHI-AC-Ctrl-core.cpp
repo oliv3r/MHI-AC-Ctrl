@@ -87,7 +87,7 @@ void MHI_AC_Ctrl_Core::set_3dauto(enum AC3Dauto vanes_3dauto) {
   vanes_3dauto_new = 0b00001010 | vanes_3dauto;
 }
 
-void MHI_AC_Ctrl_Core::set_vanes_vertical(uint vanes) {
+void MHI_AC_Ctrl_Core::set_vanes_vertical(enum ACVanesVertical vanes) {
   if (vanes == ACVANES_VERTICAL_SWING) {
     this->vanes_vertical_0_new = 0b11000000;  // enable swing
   }
@@ -97,7 +97,7 @@ void MHI_AC_Ctrl_Core::set_vanes_vertical(uint vanes) {
   }
 }
 
-void MHI_AC_Ctrl_Core::set_vanes_horizontal(uint vanes) {
+void MHI_AC_Ctrl_Core::set_vanes_horizontal(enum ACVanesHorizontal vanes) {
   if (vanes == ACVANES_HORIZONTAL_SWING) {
     this->vanes_horizontal_0_new = 0b00001011;  // enable swing
   }

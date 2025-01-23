@@ -256,12 +256,12 @@ class MHI_AC_Ctrl_Core {
     void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)
     void set_fan(uint fan);               // set the requested fan speed
     void set_fan(enum ACFan fan);         // set the requested fan speed
-    void set_vanes_horizontal(uint vanes);  // set the vanes horizontal position (or swing)
+    void set_vanes_horizontal(enum ACVanesHorizontal vanes);  // set the vanes horizontal position (or swing)
     void set_troom(uint8_t temperature);     // set the room temperature used by AC (0xff indicates the usage of the internal room temperature sensor)
     void enable_error_operating_data();             // request that the AC provides the error data
     float get_troom_offset();             // get troom offset, only usefull when ENHANCED_RESOLUTION is used
     void set_troom_offset(float offset);  // set troom offset, only usefull when ENHANCED_RESOLUTION is used
     void set_frame_size(uint8_t framesize);  // set framesize to 20 or 33
-    void set_3dauto(enum AC3Dauto vanes_3dauto); // set the 3D auto mode on or off
-    void set_vanes_vertical(uint vanes);  // set the vanes LR (vertical) position
+    void set_3dauto(enum AC3Dauto vanes_3dauto);  // set the 3D auto mode on or off
+    void set_vanes_vertical(enum ACVanesVertical vanes);  // set the vanes LR (vertical) position
 };
