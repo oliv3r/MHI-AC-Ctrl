@@ -151,6 +151,14 @@ enum ACMode {  // Mode enum
   ACMODE_HEAT = 0b00010000,
 };
 
+enum ACFan {  // FAN speed enum
+  ACFAN_QUIET  = 0b00000000,
+  ACFAN_LOW    = 0b00000001,
+  ACFAN_MEDIUM = 0b00000010,
+  ACFAN_HIGH   = 0b00000110,
+  ACFAN_AUTO   = 0b00000111,
+};
+
 enum ACVanesHorizontal {  // Vanes enum
   ACVANES_HORIZONTAL_UNKNOWN = 0,
   ACVANES_HORIZONTAL_1       = 1,
@@ -247,6 +255,7 @@ class MHI_AC_Ctrl_Core {
     void set_mode(ACMode mode);           // change AC mode (e.g. heat, dry, cool etc.)
     void set_tsetpoint(uint tsetpoint);   // set the target temperature of the AC)
     void set_fan(uint fan);               // set the requested fan speed
+    void set_fan(enum ACFan fan);         // set the requested fan speed
     void set_vanes_horizontal(uint vanes);  // set the vanes horizontal position (or swing)
     void set_troom(uint8_t temperature);     // set the room temperature used by AC (0xff indicates the usage of the internal room temperature sensor)
     void enable_error_operating_data();             // request that the AC provides the error data

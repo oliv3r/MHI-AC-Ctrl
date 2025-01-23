@@ -86,23 +86,23 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
   }
   else if (strcmp_P(topic, PSTR(MQTT_SET_PREFIX TOPIC_FAN)) == 0) {
     if (strcmp_P((char*)payload, PAYLOAD_FAN_AUTO) == 0){
-      mhi_ac_ctrl_core.set_fan(7);
+      mhi_ac_ctrl_core.set_fan(ACFAN_AUTO);
       publish_cmd_ok();
     }
     else if (strcmp_P((char*)payload, "1") == 0){
-      mhi_ac_ctrl_core.set_fan(0);
+      mhi_ac_ctrl_core.set_fan(ACFAN_LOW);
       publish_cmd_ok();
     }
     else if (strcmp_P((char*)payload, "2") == 0){
-      mhi_ac_ctrl_core.set_fan(1);
+      mhi_ac_ctrl_core.set_fan(ACFAN_MEDIUM);
       publish_cmd_ok();
     }
     else if (strcmp_P((char*)payload, "3") == 0){
-      mhi_ac_ctrl_core.set_fan(2);
+      mhi_ac_ctrl_core.set_fan(ACFAN_HIGH);
       publish_cmd_ok();
     }
     else if (strcmp_P((char*)payload, "4") == 0){
-      mhi_ac_ctrl_core.set_fan(6);
+      mhi_ac_ctrl_core.set_fan(ACFAN_AUTO);
       publish_cmd_ok();
     }
     else
@@ -205,7 +205,7 @@ class StatusHandler : public CallbackInterfaceStatus {
             Serial.printf("power_status: unknown; received ACSTATUS_POWER: %i\n", value);
             if (value == ACPOWER_OFF) {  // Only when status is power off, set fan to Auto. 
               Serial.println("Set fan to Auto to fix fan status after powerdown (230V) AC");
-              mhi_ac_ctrl_core. set_fan(7);
+              mhi_ac_ctrl_core.set_fan(ACFAN_AUTO);
             }
           } else if (power_status == off) 
             Serial.printf("power_status: off; received ACSTATUS_POWER: %i\n", value);
@@ -264,19 +264,19 @@ class StatusHandler : public CallbackInterfaceStatus {
           break;
         case ACSTATUS_FAN:
           switch (value) {
-            case 0:
+            case ACFAN_QUIET:
               output_P(status, TOPIC_FAN, "1");
               break;
-            case 1:
+            case ACFAN_LOW:
               output_P(status, TOPIC_FAN, "2");
               break;
-            case 2:
+            case ACFAN_MEDIUM:
               output_P(status, TOPIC_FAN, "3");
               break;
-            case 6:
+            case ACFAN_HIGH:
               output_P(status, TOPIC_FAN, "4");
               break;
-            case 7: 
+            case ACFAN_AUTO:
               output_P(status, TOPIC_FAN, PAYLOAD_FAN_AUTO);
               break;
             default: // invalid values
@@ -463,7 +463,7 @@ void setup() {
 #ifdef USE_EXTENDED_FRAME_SIZE    
   mhi_ac_ctrl_core.set_frame_size(33); // switch to framesize 33 (like WF-RAC). Only 20 or 33 possible
 #endif  
-  // mhi_ac_ctrl_core.set_fan(7); // set fan AUTO, see https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99
+  // mhi_ac_ctrl_core.set_fan(ACFAN_AUTO); // set fan AUTO, see https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99
 }
 
 

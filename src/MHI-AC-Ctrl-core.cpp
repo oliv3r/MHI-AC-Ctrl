@@ -79,7 +79,7 @@ void MHI_AC_Ctrl_Core::set_tsetpoint(uint tsetpoint) {
   this->tsetpoint_new = 0b10000000 | tsetpoint;
 }
 
-void MHI_AC_Ctrl_Core::set_fan(uint fan) {
+void MHI_AC_Ctrl_Core::set_fan(enum ACFan fan) {
   this->fan_new = 0b00001000 | fan;
 }
 
